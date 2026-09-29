@@ -1,0 +1,29 @@
+According to this guy on reddit, each ammo type has a specific damage multiplier
+https://www.reddit.com/r/SulfurGame/comments/1grmpqg/comment/lxaacm4/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+
+9mm: 3x
+5.56: 4x
+7.62: 5x
+BMG: 10x
+12 gauge: 12x
+
+but he didn't test 12 gauge
+
+He also says that all shotguns have a spread of 2 degrees when rechambered
+
+
+https://steamcommunity.com/app/2124120/discussions/0/6955341348098543026/
+
+fnart saw a 60 -> 80 damage increase when rechambering 9mm to 5.56 (consistent)
+SpAwN saw a 96 -> 72 damage decrease when rechambering 5.56 to 9mm (consistent)
+Knux Redbeard speaks with confidence, giving the following multipliers
+
+9mm: 3x
+556: 4x
+762: 5x
+12g: 8x
+BMG: 10x
+
+Oh, the wiki lists the caliber numbers for each weapon. Fun.
+Well, in that case, we can effectively ignore a weapon's actual caliber and damage and look at its 50BMG damage
+Each shotgun actually only has 1 spread except the super inaccurate ones, which get 2

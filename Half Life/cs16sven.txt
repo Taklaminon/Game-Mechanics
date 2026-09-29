@@ -1,0 +1,8 @@
+Most weapons use the kickback function, but some do not (notably sniper rifles)
+
+non kickback:
+
+
+kickback:
+no recoil for the first shot 
+	since kickback is called after fire, the kickback applies on the second shot onwards

@@ -1,0 +1,31 @@
+Don't let exceed 1 group:
+
+SMG
+handgun
+shotgun
+rifle
+magnum
+
+Resources(L)
+Resources(S)
+gunpowder
+
+flash grenades
+heavy grenades
+grenades
+
+
+Don't let exceed 40:
+black bass (20 if charm equipped)
+
+
+weapons present don't matter
+
+keeping only a small amount of a given ammo type will increase the amount dropped (not just the rate). 
+
+Theorycrafting:
+	method 1: sell sell sell
+		sell most of your ammo, down to the minimum amount you feel comfortable with. Sell ammo you never use down to 0.
+	method 2: smart-ish sell
+		sell a lucrative ammo type but hoard the rest up to 1 stack. This allegedly gives the lowest chance to get the ammo type (going above 1 stack replaces spawns with tiny amounts of money)
+		The issue is that this will lead to your hoarded ammo types giving much less ammo

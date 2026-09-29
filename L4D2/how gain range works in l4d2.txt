@@ -1,0 +1,10 @@
+how gain range works in l4d2:
+
+There is a halfway point between gainRange and range where behavior changes to be marginally less punishing
+
+If the distance is less than gainRange (or gainRange is 0):
+	damageMult = rangeMult^(distance/500)
+If the distance is between gainRange and the halfway point:
+	damageMult = rangeMult^(distance/500) * [1 - (2-2*distance)^log2(5)/2]
+If the distance is between the halfway point and range:
+	damageMult = rangeMult^(distance/500) * (2*distance)^log2(5)/2

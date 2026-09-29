@@ -1,0 +1,49 @@
+testing done on hard
+It's harder to find out the stomp damage since grounded enemies typically have already taken lots of damage. It's between a 1.7379x multiplier and a 1.75817x multiplier. It's probably a 1.75x multiplier.
+
+lying figure
+head- 72.5 (half stun on first shot, knockdown on second)
+body-36.25 (half stun on second shot)
+leg- 36.25 (half stun on second shot, full stun on third; you can mix and match legs)
+knee-36.25 (guaranteed stun)
+floor bash stick: 64ish
+stomp: 64ish
+melee stick: 18.125 (chance to knock over, all 3 attacks have the same chance)
+running melee stick: 36.25
+backshot stick: 36.25 (chance to knock over, guaranteed on stealth)
+deals:
+30 for ranged
+25 for melee
+20 for grab (if you QTE out of it)
+
+Lying figure (otherworld)
+head- 77 (half stun)
+body-38.5 (half stun on second shot)
+leg- 38.5 (half stun on first shot, full stun on second; you can mix and match legs)
+knee-38.5 (guaranteed stun)
+floor bash stick: 67.25ish
+stomp: 67.25ish
+melee stick: 19.25 (chance to knock over, all 3 attacks have the same chance)
+running melee stick: 38.5 
+backshot stick: 38.5 (chance to knock over, guaranteed on stealth)
+deals:
+35 for low-to-high spit
+30 for snipe, suicide
+25 for forward spit
+15 for melee
+5 for residue
+
+
+
+
+timing doesn't matter for stunning
+the three melees in a regular attack deal the same damage
+You can, in fact, sneak up on enemies in daylight. Light doesn't make them hear better.
+
+
+blood on screen starts at 70 and below
+red cross appears at 40 and below
+heartbeat appears at 10 and bellow
+you can survive a fatal hit if you don't hear a heartbeat
+health drink heals 30
+syringe heals 100

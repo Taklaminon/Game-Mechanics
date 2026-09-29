@@ -1,0 +1,65 @@
+gray = heal    | 50 age for seed | 25 age for plant (125 profit)
+yellow = hp up | 50 age for seed | 50 age for plant (150 profit)
+purple = mp up | 125 age for seed| 75 age for plant (225 profit)
+red = magic    | 500 for seed    | 500 for plant (0 profit)
+
+99 yellow seeds cost 99 cents
+99 gray seeds cost 198 cents
+99 purple seeds cost 495 cents
+total costs 792 cents
+
+a full garden is 48 plots
+
+
+you get 3000 age free on night 1
+you get 22275 age for the seeds on night 1
+you can plant 25 red seeds if you don't buy any magics. I'll spend 6000 for each magic to test, then figure out which one I actually want.
+40 purple are needed to gain the 200 magic required to cast void, so just let the cat do it for you.
+	The cat can't eat organ lung
+	
+
+days:
+day 1- 1 tuna in cabinet, 50 cents for coffee at cafe, several items at store, bathroom door key, 
+night 1- 1 tuna in cabinet, toilet shop, can get cat, 3 shoules in trash
+day 2- 1 free coffee at cafe, several items at store, police gone
+night 2- day 1 plants mature, you can no longer plant crops, toilet shop
+day 3- QStore is screwed, there are OP monsters everywhere and a tin of tuna in the back, maybe more
+night 3- 
+
+
+spells:
+summon thing- 100 magic, spawns a purple thing that says "31283712389231" and then lets you phase thru walls until you find another purple thing. purple thing locations described later. You can interact with objects but not pick anything up or enter any areas or shower or interact with people or sleep. Seemingly every door locks in both directions, so you can't open any door this way. You can finally read the text for the large circles on the ground. "A dirty old tire." You can eat the dog for 250 psi
+
+undoor- single use, destroys a locked door, probably the only way to reach the dog behind the white house. 
+The white house contains a sink and a dog. The dog doesn't seem to do anything. 
+The left black house has a sink, a purple USB, a tin of tuna, an unusual sink that quenches less thirst
+The right black house has a tin of tuna and a single resident who does nothing
+The qstore (night 2) has nothing of value
+Anne's (night 2) doesn't let you steal stuff, but the backdoor is open. The shopkeep has become a flying monster. Has tuna, lots of organlung (way more on night 3)
+
+void I- 200 magic, sends you to a strobe land with a ton of enemies where you gain several cans a second. The exit is directly down from the entrance. It seems the cap here is 9801. You really only need to visit once. try to stay around places where you can jump, and wait by the exit cuz it might give more cans
+
+Void II- 200 magic, sends you to a tall grey room that loops horizontally. There are flying enemies that constantly spawn and can kill you in 1 hit. There doesn't seem to be an exit.
+
+
+purple thing locations:
+behind 24heats- gives you 1 box of matches, and the key to 24heats. There are also lots of ghosts. 
+
+playground- lets you pick up the shoule from from a trashcan just south, another shoule, fog bud dealer (heal 20 hp for 200 age), keys to your own gate, a bathroom that "repels you." Requires another tp to leave
+
+2 left gate tps- why would you use this? shopkeep sells ????? stone for 1000, untethering for 20000. The stone has no obvious use, and untethering claims to "advance time." Maybe it sends you years into the future or lets you sleep in the church or something. Homeless man gives 100 age per can. blue USB stick (requires health sacrifice from night 2)
+	Get 40 purples, eat them, infinite mone
+
+trash pile- a few cans, I saw a red USB there on a later day. Requires another tp to exit
+
+below church- church key, sink. Maybe there's something here on a later day? (nothing night 2)
+
+farther below church- 1 shoule, tower lung hidden in a bullshit spot behind a tree, requires another tp to exit
+
+
+
+USBs:
+Blue USB allows you to play white noise through headphones. I don't know what point this has.
+Purple USB shows a picture of a symbol. It's a capital psi with a horizontal line through the bottom and a downright diagonal at the intersection.
+Red USB shows a picture of a dog and nothing else. It's not the same dog in the white house.
+Collecting all 3 USBs doesn't seem to do anything.

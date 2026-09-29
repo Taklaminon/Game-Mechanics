@@ -1,0 +1,21 @@
+helmet                  o
+scarf                   x
+tank top                x
+hawaiian shirt          x
+long sleeve t-shirt     x
+denim shirt             o
+diamond pattern sweater x
+leather jacket (long)   o
+apron                   o
+long johns              x
+leather trousers        x
+long socks              o
+military desert boots   o
+leather gloves          x
+
+
+
+scarf                   x
+hawaiian shirt          x
+diamond pattern sweater x
+leather trousers        x

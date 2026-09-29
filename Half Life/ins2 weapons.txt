@@ -1,0 +1,94 @@
+ins2 weapons
+
+accuracy mechanics:
+each shot has a base spread that gets multiplied by various modifiers, calculated with the function "base::WeaponBase.VecModAcc"
+
+The first multiplier is as follows:
+	if you're in the air, multiply by flFlyMod
+	else if you're crouched or using bipod, multiply by flDuckMod
+	else if you're moving, multiply by flMovMod
+The result is that crouching nullifies the effects of moving and being airborne nullifies the effects of crouching+moving
+
+The remaining multipliers are as follows:
+	if WeaponSelectFireMode == SELECTFIRE_SEMI, multiply by 0.9
+		not sure if this counts for weapons that can only use semi
+		from reading through the code, it seems like no value is set for weapons without an option, so presumably it defaults to 0, which is semi
+			that means even auto-only weapons get this buff
+	if WeaponADSMode == IRON_IN, multiply by 0.85
+		this counts even for scoped weapons
+	if m_pPlayer.pev.fov < 25, multiply by 0.75
+		not sure if this counts for default_fov
+		only sniper rifles have fov this low
+
+
+VecModAcc(Vector& in VecCone, float flFlyMod, float flDuckMod, float flMovMod)
+	VecCone- base spread without modifiers
+	flFlyMod- multiplier while airborne
+	flDuckMod- multiplier while ducking OR mounted bipod
+	flMovMod- multiplier while moving
+
+shotguns use a different system where the spread is predefined and isn't affected by any variables
+The coach gun also fires a slug for the primary and tertiary attacks.
+	slug has 0 spread while using ironsights and 1 degree while not or during the tertiary fire
+	6*8 damage for shot, 50 damage for slug on primary
+	12*8 damage for shot, 50*2 damage for slug on tertiary
+
+
+
+
+
+recoil mechanics
+When using ironsights or semi-auto, generally handled by function PunchAngle
+void PunchAngle( Vector& in vPunch )
+	vPunch- base recoil in x,y,z
+x is vertical, y is horizontal
+I believe the "z" is for roll. I don't remember roll ever being all that bad.
+Takes a single argument for the base and has different multipliers for different cases
+no bipod and no ironsights: (1,1,1)
+no bipod and ironsights: (0.5,0.75.0.25)
+bipod and no ironsights: (0.4,0.6,0.25)
+bipod and ironsights: (0.25,0.5,0.2)
+
+vPunch is typically a vector of 3 random values, with the y value being one of two values with 50% chance
+
+
+
+When not using ironsights on an automatic, generally handled by function KickBack
+void KickBack( float up_base, float lateral_base, float up_modifier, float lateral_modifier, float up_max, float lateral_max, int direction_change ) // cs1.6 like recoil
+	up_base- how much to punch up on each shot
+	lateral_base- how much to punch left/right on each shot
+	up_modifier- how much to punch up on each shot * m_iShotsFired
+	lateral_modifier- how much to punch left/right on each shot * m_iShotsFired
+	up_max- max amount to punch up
+	lateral_max- max amount to punch left/right
+	direction_change- 1/p + 1, where p is the chance to switch lateral directions after each shot
+
+m_iShotsFired resets when reloading and holstering
+	seems to also reset whenever your weapon is idle AND you're able to shoot, very generous
+there's an exception where the up_modifier and lateral_modifier don't apply when m_iShotsFired == 1. Not sure if this is the first shot or second shot.
+
+
+
+range mechanics
+the max distance is typically 8192, but it gets heavily nerfed while underwater, as low as 384 and as high as 1024. 
+Shotguns typically have a range around 2048.
+
+
+VecCone
+all assault rifles use VECTOR_CONE_1DEGREES
+all battle rifles use VECTOR_CONE_1DEGREES
+all carbines use VECTOR_CONE_1DEGREES
+all pistols/revolvers use VECTOR_CONE_1DEGREES
+all LMGs use VECTOR_CONE_2DEGREES
+all regular rifles use VECTOR_CONE_1DEGREES
+all SMGs use VECTOR_CONE_1DEGREES
+dragunov, g43, and m21 use VECTOR_CONE_1DEGREES
+m40a1 has 0.6 degrees
+mosin has 0.75 degrees
+	sidenote: crouching makes a huge difference for snipers, between 0.35 (dragunov) and 0.1 (m40a1)
+
+coach gun has 4 degrees
+Ithaca has 4.66 degrees
+m590 has 5 degrees
+m1014 has 4x5 degrees
+saiga has 7 degrees

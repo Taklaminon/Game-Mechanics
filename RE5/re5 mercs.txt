@@ -1,0 +1,30 @@
+generally, Try to find flash grenades and use them when an enemy mutates to prevent losing the combo.
+When a boss appears, don't go for melees, and instead focus on dealing damage quickly without losing the combo.
+My assumption is that behind melees take too much time to be worth it
+when a melee knocks down additional enemies, try to stomp/impale them for a guaranteed kill. If you can't get that, make a headshot followed by melee.
+
+public assembly:
+male- 800 hp
+female- 700 hp
+executioner- 8000 hp
+
+Chris- head/leg melees deal 400 damage. We need to get enemies down to 400 hp to get a kill.
+Chris BSAA- shoot enemies in the leg with pistol until they stun. If a majini stuns on the first shot, shoot again to get up to 450 damage. Then do a front melee. If you knock an enemy down, an impale is a guaranteed kill.
+	Alternate strategy for female- shoot in head and then punch. This guarantees a kill but risks the 3/8 crit chance.
+		I have to check this strat for floating point errors
+Chris Safari- shoot in head then punch (dicking around with leg shots isn't necessary it due to low crit chance)
+Chris STARS- shoot males in body twice and head once. shoot females in body once and head once.
+
+
+Sheva- head/leg melees deal 350 damage. We need to get enemies down to 350 to get a kill.
+Sheva BSAA- shoot males in the leg 5 times with the VZ for 450 damage. Follow up with a melee. If you knock and enemy down, an impale is a guaranteed kill
+	shoot females in the leg 4 times for 360 damage. Follow up with a melee
+Sheva clubbin- shoot males in body 
+
+Jill- head/leg melees deal 350 damage
+Jill BSAA- shoot males in the leg 5 times, shoot female in the leg 4 times
+
+
+Wesker- head melee deals 1200 damage. Don't bother with leg melees
+Wesker Midnight- Shoot any enemy once in the head and melee
+Wesker STARS- shoot any enemy once in the head and melee

@@ -1,0 +1,24 @@
+behavior is largely set in the "GetSchedule" function
+
+HGrunt: 
+if "damaged just a little," 90% chance of flinch and 10% chance of taking cover
+	I don't know conditions for bits_COND_LIGHT_DAMAGE, probably in CSquadMonster
+		COND_LIGHT_DAMAGE is set when taking ANY damage (even over 20)
+		COND_HEAVY_DAMAGE is set when taking damage OVER 20 in a single hit (shotgun is a single hit)
+	behavior for flinching is in CSquadMonster
+		Looks like it just plays an animation related to the position of the hit
+
+But what does heavy damage do?
+	looks like nothing
+
+
+
+houndeye:
+looks like any damage type causes retreat if the monster is in MONSTERSTATE_COMBAT
+
+
+Looks like COND_LIGHT_DAMAGE and COND_HEAVY_DAMAGE are cleared every time RunAI is called
+Looks like RunAI is called from MonsterThink
+	Well whatever the case, I'm pretty sure that just means stunning is only applied on the next think and isn't cancelled anywhere else
+
+Looks like both light and heavy damage alert enemies. Shocker

@@ -1,0 +1,85 @@
+hp data in DefineSprite (chid: 857)
+
+zombie1:
+100 hp
+20, 40, 100
+
+zombie2:
+130 hp
+20, 40, 150
+
+zombie3:
+100 hp
+30, 50, 100
+
+beefy: 
+300 hp
+20, 40, 150
+
+simplified values:
+zombie1: 5
+zombie2: 7
+zombie3: 4
+zombie4: 15
+
+pistol: 1
+rifle: 2
+shotgun: 7.5
+
+Survival wave numbers
+specific data kept in DefineSprite (chid: 857) frame 1 PlaceObject 2
+R = random zombie from zombie1 to zombie3.
+0   5 5|
+2   5 5|
+4   5 5 5|
+7   5 5 5|
+10  5 5 5 R|
+14  R R|
+16  R R R R R|
+21  R R R|
+24  R R R|R R
+27  5 5 5|
+32  5 5 5 5|
+36  R R|R
+38  R R R|
+42  R R|R R 
+44  15 15 15|
+49  R R R|
+52  4 4 4 4|
+56  4 4|4 
+58  5 5 5|
+62  15 15 15 15|
+66  4 4|4
+68  15 15 15|
+72  15 15 15|15
+75  4 4 4|
+79  15 15 15|
+82
+
+best rng:
+0   5 5|
+2   5 5|
+4   5 5 5|
+7   5 5 5|
+10  5 5 5 4|
+14  4 4|
+16  4 4 4 4 4|
+21  4 4 4|
+24  4 4 4|4 4
+27  5 5 5|
+32  5 5 5 5|
+36  4 4|4
+38  4 4 4|
+42  4 4|4 4 
+44  15 15 15|
+49  4 4 4|
+52  4 4 4 4|
+56  4 4|4 
+58  5 5 5|
+62  15 15 15 15|
+66  4 4|4
+68  15 15 15|
+72  15 15 15|15
+75  4 4 4|
+79  15 15 15|
+82
