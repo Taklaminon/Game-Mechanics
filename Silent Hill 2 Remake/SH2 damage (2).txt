@@ -1,0 +1,312 @@
+testing done on hard
+It's harder to find out the stomp damage since grounded enemies typically have already taken lots of damage. It's between a 1.7379x multiplier and a 1.75817x multiplier. It's probably a 1.75x multiplier.
+
+lying figure
+head- 2x (half stun on first; knockdown on second) (sigmaland)
+body-1x (half stun on second, fourth; knockdown on fifth) (sigmaland)
+leg- 1x (half stun on second, full stun on third; you can mix and match legs) (sigmaland)
+knee-1x (guaranteed stun)
+backshot stick: 2x (chance to knock over, guaranteed on stealth)
+While kneeling, 2 leg shots (or 1 knee shot) will cause a knockdown (sigmaland)
+deals:
+30 for ranged
+25 for melee
+20 for grab (if you QTE out of it)
+
+Lying figure (otherworld)
+head- 2x (half stun on first; knockdown on second)
+body- 1x (half stun on second, third; knockdown+panic on fourth)
+leg-  1x (half stun on first shot, full stun on second; you can mix and match legs)
+knee- 1x (guaranteed stun)
+While full stunned, shooting the leg or knee 3 times will cause it to fall over.
+When knocked down, lying figures will "panic" and crawl around for a while before standing back up. Meleeing or shooting the head in this state will cause special half stuns
+deals:
+35 for low-to-high spit
+30 for snipe, suicide
+25 for forward spit
+15 for melee
+5 for residue
+
+
+
+mannequin
+"arm"- 1x damage (half stun on first, second, third; knockdown on fourth; seperate from body)
+body- 1x damage (half stun on first, second, third; knockdown on fourth) (melee hits seem to count towards this, but they reset if you knock down the enemy by shooting in the arms. This is impossible in normal gameplay)
+leg- 1x damage (half stun on first, second; full stun on third)
+knee- 1x damage (full stun)
+shotgun- 1x damage (half stun; knockdown on point blank)
+while full stunned, 1 shot to the leg or knee causes a knockdown. shooting the knee that's on the ground does nothing. (inv)
+
+
+Nurse
+head- 2x damage (half stun on second and third, knockdown on fourth)
+body- 1x damage (half stun on second and fifth)
+arms- 1x damage (half stun on second and fifth; not connected to body stuns)
+legs- 1x damage (half stum on second and third, full stun on fourth)
+knee- 1x damage (half stun on first, full stun on second)
+head (shotgun)- 1.5x damage (half stun; knockdown at point blank)
+body (shotgun)- 1x damage (half stun; knockdown at point blank)
+arms (shotgun)- 1x damage (half stun; knockdown at point blank)
+legs (shotgun)- 1x damage (half stun; knockdown at point blank)
+knee (shotgun)- 1x damage (half stun; knockdown at point blank)
+
+
+Nurse (OW) (all things tested with invincibility)
+head- 2x damage (chance to half stun on first and second; half stun with chance to knockdown on third; knockdown on fourth)
+body- 1x damage (half stun on second and fifth; knockdown on eighth)
+arms- 1x damage (half stun on second and fifth; knockdown on eighth; separate from body shots)
+legs- 1x damage (chance to half stun on first 3; full stun on fourth; full stun resets knee counter)
+knee -1x damage (half stun on first; full stun on second; doesn't reset leg counter)
+head (shotgun)- (half stun; knockdown at point blank)
+everywhere else (shotgun)- (half stun)
+head (rifle)- 3x damage (knockdown)
+body (rifle)- 1x damage (half stun on first, second; knockdown on third)
+arms (rifle)- 1x damage (half stun on first, second; knockdown on third)
+legs (rifle)- 1x damage (full stun)
+knee (rifle)- 1x damage (knockdown)
+half stun animation for shotgun seems to only depend on distance. For some reason, it seems to be longer when the player is farther away.
+shooting while full stunned will cause a knockdown where it wouldn't usually
+	head- 2 shots
+	body- 3 shots
+	knee- 1 shot
+	anywhere (rifle)- 1 shot
+	anywhere (shotgun)- 1 shot
+@any info here probably applies as well to the regular nurse@
+
+Mandarin (under)
+each hand has a health subpool that quickly regenerates. This subpool seems to work different from regular damage. A stomp fills it the same amount as a handgun bullet despite dealing more than 2x as much damage.
+While it's hanging by 1 arm, that arm will not regenerate until the other arm is pulled up
+hand- 0.1x (stun on third)
+hand (stomp)- 0.1x (stun on third)
+hand (shotgun)- 0.1x (stun on second)
+hand (rifle)- 0.1x (stun on first)
+hand (chainsaw)- 0.1x (stun on first)
+everywhere else- 0.5x
+The hands each have separate counters. 
+	Each attack adds to a single counter, so 1 shotgun shell + 2 handgun stuns, as well as 1 hangun + 1 shotgun.
+		(this may be how every counter works)
+	stunning either hand resets the counter for both hands
+	stunning both hands at the same time causes death
+
+spider mannequin
+rifle- 1x damage
+pistol- 1x damage
+shotgun- 1x damage (surprisingly)
+body- 1x damage (shortest half stun of all time) (sigmaland)
+legs- 1x damage (knockdown on third) (sigmaland)
+	impossible in normal gameplay  @THIS CANNOT BE CORRECT. I HAVE GOTTEN STUNS ON 2 SHOTS BEFORE@
+knockdown from shotgun and rifle (any range)
+
+
+Mandarin (stealth)
+When they spot you, they will make a sound similar to the one they make before attacking
+While chasing, they'll walk at a steady pace, instead of the stilted pace they usually walk at
+seems to keep chasing until you leave the area they can move in.
+	They will continue to chase for a few seconds after leaving the area, but they won't be able to reach you
+	the first two mandarins are actually locked to different halves of the floor
+Can detect you even while you are outside of the halls, but will stop chasing if you leave sight for a little bit
+If he hears you while crying, he will start chasing
+
+
+pyramid head
+has 1000000 hp
+1x damage from every source at every location
+first phase ends after 1200 damage
+fight ends after 4000ish damage
+the damage required to enter phase 2 and the end of the fight decreases over time, 20 per second i think
+not affected by 1hp magic
+Has no reaction to damage when you meet him in the labrynth. Won't even react to running out of HP.
+	stops chasing once you enter the hole in the wall of his sanctum, resumes if you leave
+	disappears entirely when you pick up the single-use bolt cutters
+	Will not attack you when he appears after using the wire cutters
+
+
+Flesh Lip phase 1
+arm- 1x damage (drops from ceiling)
+metal grate- 0.6x damage (you can tell whether you hit the grate or the body by the sound the shot makes)
+metal bar- 0.6x damage (this includes metal arms)
+back- 0.6x damage
+body- 1x damage (that includes the lips)
+melee- 2x
+backshot melee- 2x, guaranteed heavy attack (effectively 4x)
+0.8x multiplier for shotguns, meaning they're less effective
+Occasionally, it will teleport while above the ceiling. This seems to happen if it reaches you too quickly after going up. When this happens, you'll hear 2 distant screams. The first tells you it disappeared. The second tells you it appeared again.
+
+Flesh lip phase 2
+arm- 1x
+body- 0.85x 
+back- 0.36x
+metal bar- 0.85x
+melee- 2x
+backshot melee- 2x, guaranteed heavy attack (effectively 4x)
+0.8x multiplier for shotguns, meaning they're less effective
+starts the phase with a long pause while it tries to get into the ceiling
+seems to scream at random. For a regular run, this is good, since you lose 1 hp and he gets stunned for a few seconds, but this is pretty bad for a no damage run
+
+abstract daddy
+back- 1x
+front-0.5x
+legs- 1x (half stun on second)
+arms- 0.5x
+
+back (rifle)- 1.2x
+belly (rifle)- 0.5x
+legs (rifle)- 1.2x (half stun)
+arms (rifle)- 0.5x
+feet (rifle)- 1x
+head is part of the back
+
+back (shotgun)- 0.5x
+front(shotgun)- 0.2x
+arms (shotgun)- 0.2x
+legs (shotgun)- 0.5x
+feet (shotgun)- 1x
+melee- 1.5x
+Phase 1- if he goes under 2000 hp, he will be set to 0 hp
+Phase 2 can be skipped if you go through the crevice after breaking the TV
+	Starts at 2000; if he goes under 1000, he will be set to 0
+	Choosing to fight doesn't affect his other phases
+Phase 3 can be skipped if you run back to angela's hiding spot after he appears
+	same as last
+Phase 4 is the final phase
+	Starts at 2000; only dies if you bring him to 0
+
+Eddie phase 1-
+anywhere- 1.5x (half stun)
+anywhere (shotgun)- 0.7x (half stun)
+anywhere (rifle)- 1x (half stun)
+melee- 1x (half stun)
+
+Doesn't appear until he finishes his dialogue, unless you've already been to his boss room.
+	Appears as far as possible from the player
+Can interrupt a half stun with a dodge
+Not affected by 1 hp magic
+	unless he has recently hit you with a headbutt
+only has 3 shots in the revolver
+	can instantly reload while running, but takes time while standing still
+
+phase 2-
+disappears at the start of the phase until after he finishes his dialgoue and taunts
+can run away and disappear and reappear after taunting
+orchestral hit means he's going to run in to punch you.
+has 6 shots in revolver
+
+phase 3-
+same as phase 1 but only melees the player as a reaction to a player's attack
+has 6 shots in revolver
+
+
+Mandarin (over)-
+all attacks deal 1x damage everywhere. Nothing "stuns" this thing per se. Attacks to the head can cancel its attack.
+
+
+pyramid twins-
+reacts the same to all damage as the single pyramid head
+share a single health bar of 3200 hp. does not drain over time.
+The one that starts out to your left has a much shorter wind up time for his stab attack. They both have the same models.
+
+
+Mary Maria phase 1-
+1000 hp
+body- 1x (no reaction)
+cage- 1x (no reaction)
+head- 2x (knockdown on second)
+body (rifle)- 1x (no reaction)
+head (rifle)- 2x (knockdown)
+body (shotgun)- 0.56x (no reaction)
+cage (shotgun)- 0.56x (no reaction)
+head (shotgun)- 1.05x (knockdown)
+melee- 1.5x damage (no reaction)
+cannot be stunned during attack animations
+will disappear after being stunned
+	can be stunned while getting up to disappear, leading to another stun upon reappearing.
+is invincible instantly after starting the disappearing animation. Is vulnerable instantly after starting the appearing animation.
+
+phase 1.1-
+will only use the bird attack
+screams and enters phase 1.2 upon hitting 80% hp or after enough time passes
+
+phase 1.2-
+can use the following attacks:
+	birds 
+	tentacle stab, slash, and grab
+	scream
+
+phase 2-
+700 hp
+body- 1x
+head- 1.2x (knockdown)
+body (shotgun)- 0.5x
+head (shotgun)- 0.84x (knockdown)
+body (rifle)- 1x
+head (rifle)- 2x (knockdown)
+melee- 2x
+after being knocked down, disappears
+runs across the arena in a straight line towards the player. If the player is still in her path, she will pass by, turn around, and then drop.
+After running across, has a chance to play a voice line, cough, and summon birds. This will cause the flashlight to flicker
+
+phase 3-
+2000 hp
+body- 1x
+head- 2x
+body (shotgun)- 0.63x
+head (shotgun)- 0.7x
+body (rifle)- 1x
+head (rifle)- 2x
+melee- 3x
+screams at 75% hp (possible phase change)
+
+Mary birds-
+don't have a health bar. Instead, they die upon being stunned.
+- (die on third)
+(shotgun)- (die on first)
+(rifle)- (die on first)
+melee- (die on first)
+
+
+
+timing doesn't matter for stunning
+the three melees in a regular attack deal the same damage
+You can, in fact, sneak up on enemies in daylight. Light doesn't make them hear better.
+
+
+blood on screen starts at 70 and below
+red cross appears at 40 and below
+heartbeat appears at 10 and below
+you can survive a fatal hit if you don't hear a heartbeat
+health drink heals 30
+syringe heals 100
+
+Stomps deal 3.5x your melee damage, so picking up the metal pipe increases stomp damage to 126, and holding the chainsaw gives you a whopping 1400 damage
+
+shotgun damage is not affected by distance, only by spread. Shotgun stunning is affected by distance.
+
+chainsaw deals 400
+shotgun deals 210
+rifle deals 150
+pistol deals 50
+pipe deals 36
+stick deals 25
+
+
+"point blank" for shotguns is even closer than you'd have to be to get the entire head in the shotgun's spread
+enemy reactions to the shotgun don't depend on how many pellets connect, but damage does
+
+Any time an enemy revives at random, they revive with a random amount of hp between 50% and 100%
+	the two lying figures in blue apartments revive with 50%
+	the lying figure that always gets back up in Toluca always has a random amount
+	The enemies that revive at the Toluca glory hole all have 1 hp
+	The enemies in the red rooms have 100% hp.
+
+
+hitting an enemy with a chainsaw while the invincibility injection is enabled causes them to stop attacking while still reacting the same to attacks. This will be useful.
+Setting hp above max hp causes them to not stun and also prevents headshots, strangely
+
+
+pistol has a spread of about 1 degree
+	Seems to always be 1 degree from the crosshair. As in, it picks a direction and then adds 1 degree in that direction
+	Bloom seems to have almost no effect. It just makes the spread a little taller, which could just be a result of the 0 recoil mod not working as intended. Need to test with cheats.
+Rifle has 0 spread
+	Bloom has a massive effect. At full bloom, spread is about 5 degrees. Need to test at the hotel.
+Shotgun has a spread of about 7.5 degrees
+	Bloom has no effect

@@ -1,0 +1,23 @@
+total customers is the minimum of (attraction/25, skill/25, health/25) + 1. Celestia always gets 10.
+-Attraction and skill really only increase at intervals of 25. 
+-Health should always stay above the current skill value
+-The first increase doubles value
+-Cost for increase is (currentValue+1 + nextValue)(nextValue - currentValue). This is assuming you increase both at the same time and that the xp needed to get a level is the same as the number of that level.
+-Cost for first increase is about 600 usually.
+
+
+Money per customer is (a random value [3,7) + worth) * (100+charisma) * rank/100
+-Worth is generally more valuable than charisma because it's being added to a value of about 4.5 rather than 100. The difference becomes less at higher values.
+-Ratio of worth/rizz should be the same as (rizz+100)/(worth+4.5). For small values of rizz, this is roughly saying rizz = worth*worth/100.
+-Important milestones are (5, 23), (10, 31), (20, 46), (30, 60), (40, 73), (50, 84), (60, 96)
+-Rank is incredibly valuable, but it's not something you can raise directly.
+
+XP per night is rand(10,25) * rank * (1+worth)/100
+-worth is VERY important
+
+rank is given by the sum of all skills/100
+-Every level in a stat can be treated as 1/100 of a level into rank
+
+
+
+Mistress increases obediance of all ponies, even those not on duty, by 1 every day. She is paid 100 for each stat increase.

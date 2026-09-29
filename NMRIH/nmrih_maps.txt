@@ -1,0 +1,15 @@
+hellgate-
+	infinite ammo, but low enemy density
+	available on FF server
+predator-
+	haven't tried
+bathroom-
+	plenty of ammo and high enemy density with a safe farming spot
+	removed from FF server
+raccoon-
+	incredible amounts of ammo with high enemy density
+	removed from FF server
+
+hard time nightmare-
+	infinite ammo and extreme enemy density, but very difficult with slow sections
+	still on FF server for now

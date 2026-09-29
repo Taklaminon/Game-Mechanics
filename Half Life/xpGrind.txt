@@ -1,0 +1,12 @@
+inv_dojo
+	allows for almost continuous chainsaw
+
+garghnt3
+	reach cap fairly quick (nuke)
+
+xen_bossrush
+	allows high DPS weapon spam, gibbing optional
+	note: quad damage applies to custom weapons as well, big momma gives the greatest amount of points.
+
+bossrush_bonus
+	not great, the robots kill all momentum

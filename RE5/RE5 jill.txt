@@ -1,0 +1,19 @@
+Device:
+every time you shoot it, it takes 1500 damage, no matter what
+
+the grounded QTE does nothing if you don't mash
+10 quick presses dealt 270 damage, the same each time I tried it
+5 quick presses dealt 120 damage, the same each time I tried it
+2 quick presses dealth 30 damage
+	seems like the first press does nothing but each subsequent press does 30 damage. That means you gotta press F 334 times to win
+
+on standing, sheva can get 1470 damage
+	pausing causes her to get less damage
+	That means she got 50 presses
+
+I only got 1260 lying
+	1320 standing
+
+
+electric grenades only entreat stun her
+flash grenades only entreat stun her

@@ -1,0 +1,6 @@
+Assuming they drop handgun ammo, either 786432 or 36700160 handles zealots/soldiers
+
+
+resources use PointType 4 and CalcOption 0
+knives use PointType 4 and CalcOption 0
+green herbs use PointType 3 and CalcOption 1

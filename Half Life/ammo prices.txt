@@ -1,0 +1,24 @@
+ammo: weapon, amount for price
+
+7.62x54mm: pkm, 100 for 200
+7.62x51mm: ebr 20 for 20
+7.92x57mm: mg42, 250 for 200
+5.56x45mm: M249, 200 for 130
+7.62x39mm: rpk, 75 for 75
+7.62x33mm: m1a1, 15 for 20
+7.63x25mm: C96, 20 for 30
+5.45x39mm: aks, 30 for 30
+12x70buckshot: M1014, 8 for 45
+303brit: Lewis, 47 for 55
+7.62x63mm: garand, 8 for 15
+45acp: ump45, 25 for 20
+50ae: deagle, 7 for 25
+9x19mm: beretta, 15 for 15
+44magnum: m29, 6 for 20
+357magnum: python, 6 for 15
+455brit: webley, 6 for 10
+9x18mm: makarov, 8 for 5
+9x39mm: asval, 20 for 20
+7.92x33mm: stg44, 30 for 30
+5.6x30mm: mp7, 40 for 45
+40x46mm: M203, 1 for 30

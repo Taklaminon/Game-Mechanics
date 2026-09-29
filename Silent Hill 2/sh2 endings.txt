@@ -1,0 +1,44 @@
+Leave 5
++choice
++idiocy
++NG+ Maria
++NG+ In Water
+-choice
+
+min easy = 4
+on pace = 6
+max easy = 9
+
+
+Maria 3
++choice
++difficult
++difficult
++choice
++choice
++NG+ Maria
++NG+ In Water
+-choice
+-choice
+-guaranteed
+-idiocy
+-idiocy
+-idiocy
+
+min easy = -2
+max easy = 7
+
+
+In Water 2
++choice
++choice (increases escape too)
++choice
++choice
++difficult
++difficult
++NG+
++NG+
+
+min easy = 2
+max easy = 7
+max medium = 9

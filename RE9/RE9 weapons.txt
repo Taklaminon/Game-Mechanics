@@ -1,0 +1,51 @@
+best case damage values
+All damage values are with a difficulty multiplier of 1
+
+alligator snapper:
+conn charm: 264
+
+Silencer:
+conn charm: 308
+
+Matilda:
+conn charm: 286
+
+Alligator snapper is irrelevant, since it's outclassed by silencer in almost all aspects. Matilda is good for its fire rate.
+
+Gal:
+slow + BSAA: 138
+fast + BSAA: 126
+
+Stiri:
+BSAA: 120
+
+GAL outclasses the Stiri on the highest level due to its RPM, but Stiri has a place at level 2 due to its higher RPM and equal damage.
+
+
+
+MSBG and Police are allegedly useless with bear charm, but I haven't tested that for accuracy.
+
+MSBG:
+conn: 1573
+
+Police:
+conn: 2112
+
+TAC:
+bear: 2240
+
+Police ends up being easier to use since you can get up close with the conn charm. 
+TAC seems a lil more specialized, since you have to know how far 2-3 meters is. If you are even so far as 3.25 meters, the damage bonus vanishes.
+
+
+
+Classic:
+slow + BSAA: 1572
+fast + conn: 1441
+
+Marksman:
+slow + BSAA: 960
+fast + conn: 880
+
+
+

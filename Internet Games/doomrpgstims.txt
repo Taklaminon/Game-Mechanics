@@ -1,0 +1,49 @@
+for luck only
+0, 0%
+10, 6%
+20, 11%
+30, 16%
+40, 21%
+50, 26%
+60, 31%
+70, 36%
+80, 41%
+90, 46%
+100, 51%
+
+for potency only
+0, 0%
+10, 8%
+20, 22%
+30, 39%
+40, 63%
+50, 90%
+60, 124%
+70, 161%
+80, 205%
+90, 252%
+100, 306%
+more toxicity for each potency added
+
+50 luck, 50 potency; 181%; +300 luck
+50 potency, 50 luck; 181%; +300 luck
+order does not matter
+
+Theory: potency adds to the toxicity but also introduces a multiplier. Multiplier is equal to (1+potency/20). 
+This means 20 potency is the most you can survive with no augs.
+35 with augs.
+
+Theory: potency introduces a multiplier to effectiveness. Multiplier is equal to (1+potency/10).
+This means max power is achieved when there is 10 less potency than luck.
+
+55 luck, 45 potency; 168%; +302 (death)
+64 luck, 36 potency; 142%, +294 (death)
+65 luck, 35 potency; 141%, +292 (reduced speed, removeable by spell)
+
+
+Purifier increases stim time but has the same effect as potency on toxicity
+0, 10 minute
+10, 30 minute
+20, 50 minute
+
+taking a second stim removes the effects of the first entirely

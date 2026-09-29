@@ -1,0 +1,34 @@
+perfect combo rules
+
+1. Fill every recess. If a recess is not filled, filling it will never cause you to get less money
+2. Don't place rubies in a treasure if sapphires would give you more bonus, as sapphires are abundant
+	No rubies in 2 circle treasures
+	No rubies in 3 circle treasures
+3. Never choose an inlay that creates a smaller bonus, greater base, and uses more of every nonabundant gem
+
+For instance, 2 yellow 1 sapphire gives 1200 less bonus than 3 sapphire, and it leaves 6000 less value outside of the mask, since 2 yellows were replaced with blues. It also leaves 2 fewer yellow, which are nonabundant
+	This leaves only 3 sapphire and 3 yellow as viable inlays for 3 round
+
+
+For 2 round, 1 yellow 1 blue gives 1100 bonus on 11000 and uses 1 yellow. 2 blue gives 1600 bonus on 8000. 
+	This means only 2 yellow and 2 blue are viable inlays
+
+4. rule 3 actually applies to any subgroup of treasures. If the base and nonabundant gems is higher but the bonus is lower, it's no good
+
+5. A gem is abundant if you have more of it than you could possibly use given the information you've already gathered from the other rules.
+
+
+We have 19 rubies now and 3+4+2+8 = 17 places to put them. Rubies are abundant.
+
+6. A gem is abundant if, after assuming it is abundant, you create a configuration that uses fewer gems than you actually get.
+	I imagine emeralds will be abundant, so we can assume it, and check if the assumption holds by creating a configuration
+
+
+emerald + alexandrite = +1100
+2x emerald = +2000
+
+
+
+
+ADDENDUM: you also have to consider the value of the treasure itself in the bases and bonuses. The base consideration only matters when dealing with the multiple treasure case.
+ADDENDUM 2: the base shouldn't matter if you're already considering the usage of each individual nonabundant gem. Having a higher base value just means there's less money outside the treasure, but we're already subtracting that when considering the bonus instead of the full value.

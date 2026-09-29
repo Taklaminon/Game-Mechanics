@@ -1,0 +1,104 @@
+you deal 3% less damage per rank gained
+I don't know the max value for normal, so I'll make some guesses
+deal 97/250 damage against wesker. That means DA is probably at 97% damage and wesker takes 40% damage
+
+
+pistols deal 40% damage body shot
+magnums deal 20% body shot
+snipers deal 20% body shot
+shotguns deal 40% body shot 
+	also, looks like ithaca doesn't actually deal less damage due to number of pellets
+	but attack range DOES give a 2.75x buff, although people usually say it's 14/6?
+MGs deal 25% body shot
+
+headshots give 1.5x damage
+leg/arm shots give 0.5x damage
+
+damage from melees doesn't seem to be affected by difficulty
+
+full combo: 1300
+counter: 200
+
+
+
+m92: 10 shots to stun, no matter the body group
+	sheva kicking him didn't change it either, but maybe it takes multiple melees
+	changing up the groupings of shots didn't do anything
+p226: 10 shots
+p8: 10 shots
+
+m93r: 13 shots
+	slowing down doesn't change it
+
+all snipers: 7 shots
+
+all shotguns: 5 shots
+	depends on distance, doesn't depend on number of pellets hit
+
+
+AK74: 34 shots
+VZ: 50 shots
+MP5: 50 shots
+SSG: 50 shots
+
+
+all magnums: 2 shots
+
+magnum + 5 pistol is also a stun
+magnum + 17 ak74 shots is a stun
+9 pistol + 5 VZ is a stun
+
+
+12 m93r + 2 VZ is a stun
+means m93r does between 0.081666 and 0.08 of a stun
+11 m93r + 6 VZ
+doesn't affect bounds
+10 + 10
+doesn't affect bounds
+looks like it does 0.08 of a stun
+my guess is AK74 does 0.03 of a stun
+
+4 shotgun + 10 VZ
+
+looks like shotgun does 0.2 of a stun
+
+6 rifle + 5 VZ
+looks like rifle does 0.15
+
+explosive round + 38 VZ
+looks like it does 0.25
+
+looks like GL rounds only stun on direct hit, but anger him on indirect
+	exception for electric rounds
+	funny: if he gets angered while he's stunned, his stun bar will be frozen, but he won't leave the current stun
+	flash round only works if his sunglasses are off
+	same for grenades/prox mines
+	
+4 knife + 49 VZ
+
+rotten eggs don't stun, but they do 200 damage
+
+Final results:
+pistols: 0.1
+m93r: 0.08
+shotguns: 0.2
+rifles: 0.15
+machine guns: 0.02
+ak74: 0.03
+infinite minigun: 0
+stun rod: 0.1
+explosive round: 0.25
+acid round: 0.3
+flame round: 0.3
+nitrogen round: 0.5
+electric round: 0.5
+flash round: 1
+HE grenade: N/A
+incendiary grenade: N/A
+eggs: 0
+knife: 0.005
+
+
+fight seems to end after dealing 5000 damage (before difficulty scaling), but this amount resets when he kicks down the door
+fight only ends on attacks that would normally stun him, so no melees or freebies
+	you CAN still end the fight on a chain stun

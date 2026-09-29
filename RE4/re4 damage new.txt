@@ -1,0 +1,100 @@
+All testing was done on mine ganados, and it may vary with different enemy types.
+HP is stored as a 16 bit signed integer.
+
+1 power = 300 damage on ganados, Dr Salvador
+1 power = 150 damage on soldiers
+1 power = 60 damage on first gigante (unaffected by difficulty???)
+1 power = 40 damage on regenerators
+1 power = 30 damage on certain bosses (el gigante strong, Salazar, U3, Krauser)
+1 power = 6 damage on Saddler
+This also varies based on difficulty. From 0-5 it has a multiplier of 1-0.1x. From 5-inf it's 0.575-0.015x.
+Each increase by 1 subtracts 10% of player damage until level 5. After level 5, it subtracts 1.5%.
+
+Headshots deal 1.2x damage
+All other body groups deal 1x damage
+
+Dr Salvador cannot be critically headshotted
+-Damage to him is capped at 2000 per shot. This is before difficulty is applied, so it's equivalent to 6.66 power.
+
+Regenerators cannot be headshotted
+-shots on plagas always do 1000 damage, regardless of difficulty (Regenerator hp is their number of plagas times 1000)
+	-Iron Maidens work the same
+-Only rifles can destroy plagas. Magnums cannot.
+
+Salazar cannot be headshotted
+
+U3 cannot be headshotted
+-He seems to have a "stun bar" that depletes whenever he is hit. This stun bar seems to be set to a random value after he is stunned.
+	-He always stuns in 1-2 shotgun shells, regardless of damage
+	-He always stuns in 10-12 TMP shots
+	-He always stuns in 1 magnum shot
+-He will not stun while on 1 hp.
+-If he is brought to 1 hp during idle or during an attack, he will jump away.
+-I am not sure whether he will jump away if he is brought to 1 hp while jumping to a container.
+-He always jumps from the ceiling with 500 hp. You actually can damage him while he's swinging at you from the ceiling, and it will make his next drop easier.
+	-He starts container 2 with 4500 hp, but his health will be immediately reset to 500 the next time he jumps to the ceiling.
+
+Krauser headshots deal 2x damage
+-cannot be crit headshotted
+-has 10000 hp
+
+Saddler
+-Shots on leg eyes deal 2x damage
+-Ada will throw a rocket launcher to Leon when Saddler falls to 4000 hp (half health).
+-Saddler's death is not determined by his health. It's determined by the health of a separate entity created just to track his actual health.
+	-This entity is damaged every time Saddler is damaged, but it's also damaged at a rate of 1 power = 30 damage (capped at 16.66 power) whenever Saddler's mouth eye is hit.
+	-After the mouth eye takes on 26.66 power (pre-cap), it will immediately close. This is also the amount the eye stab deals. The player can shoot with Striker twice and then stab for 50.666 power.
+	-Saddler's health will snap to that of the entity when his body is shot
+
+Knife
+-Has a power between 1.72666 and 1.73
+-30.2666-30.3 against Krauser
+-Critical headshots deal 10x damage
+-Crit rate is 0%
+	-Much higher with exclusive handgun. Probably 35%
+
+Handgun
+-Critical headshots deal 10x damage
+-Crit rate is around 8% (tested 100)
+	-around 36% with exclusive (tested 200)
+
+Broken Butterfly
+-0.5x damage to U3
+-Critical headshots deal 25/9x damage (in general, crits deal damage in nice multiples of 5/9)
+-Crit rate is low. Probably 10%
+
+Bolt-Action Rifle
+-Critical headshots deal 20/9x damage
+-Crit rate is 100%
+
+Striker
+-Deals full damage even if only 1 pellet hits
+-Seemingly always headshots if the pointer is on the head and never if the pointer is on the chest. Outside of that, it could either headshot or body shot, but I do not believe it is random.
+-Critical headshots deal 75/9x damage 
+-Crit rate is around 33% (tested)
+
+TMP
+-1.4x multiplier for damage for ganados. 0.7x multiplier for Salvador. 0.8x for salazar/U3/Krauser/Saddler. This indicates that each enemy might have different weaknesses and resistances.
+-Critical headshots deal 10x damage
+-Crit rate is around 5%
+
+Mine Thrower
+-has "power" of 20
+-2 is no better than 1 due to invuln during knockback
+-can headshot
+	-always headshots if the dart lands on the head. Never headshots if the dart lands elsewhere on the body. Outside of that, it could either headshot or body shot, but I do not believe it is random.
+-Splash damage deals same amount as direct hit.
+-Critical headshots deal 30/9x damage. 
+-Crit rate is low. Probably 7%
+
+Grenade
+-has "power" of 15
+	-yea, from my testing, it's worse than the mine darts
+
+Incendiary
+-has "power" of 33.33 for U3, but possibly different for other enemies
+
+Barrel
+-has "power" of 16.66 for U3
+
+Standard crit rate seems to be 7%. Shotgun and exclusive pistol get 5x that. Rifle gets 100%.

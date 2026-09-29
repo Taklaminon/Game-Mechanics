@@ -1,0 +1,17 @@
+PerfectRandom.Sulfur.Core.Weapons has a Weapon class with a function "GetDamage()." I assume this calculates weapon damage.
+
+this.Damage is NOT a variable. Instead, it's a getter that returns base.inventoryItem.stats.GetAttribute(ItemAttributes.Damage) * this.chargeAmount;
+	GetAttribute just returns the value stored in this.activeItemAttributes for the given attribute
+	ItemAttributes is an Enum
+	Basically, this.Damage returns whatever the stored attribute is for damage.
+
+num is an integer starting at 0
+num2 is a float starting at this.Damage
+
+damageModAttribute is set to the weapon type (assault rifle, lmg, melee, etc) Enum for bonus damage
+num is increased by damage * the player's current bonus damage for the current weapon (from armors)
+
+this function goes on for a while, but it looks like it only applies damage buffs that come from potions/armors, not from attachments. Shit.
+
+On the plus side, it turns out each weapon has a run speed modifier based on it weight class. Knife, pistol, smg, rifle, sniper, bigga, and default. 
+That probably means that melees cancel weapon run speed penalties rather than add another modifier

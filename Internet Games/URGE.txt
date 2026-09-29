@@ -1,0 +1,17 @@
+A liquid container can hold 1800 mL
+A car can hold 1400 mL
+
+It takes 500 mL to start a purifier
+A purifier outputs 500 mL fuel
+
+It takes 200 mL and 20 rotten meat to compost
+Composter outputs 1 saltpeter
+
+10 Urdust to fertilize a plot
++2-3 each time a crop is harvested (does not apply to berries)
+
+Net can hold 100 mL. Attach to a liquid container with a pipe.
+
+The player can piss 150mL into a toilet and 300mL into a bottle.
+
+500mL bottles CAN be thrown out after being poured, but it seems they can't be thrown out from reloading the chainsaw.

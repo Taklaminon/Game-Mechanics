@@ -1,0 +1,19 @@
+banish occurs in FloatingCardManager.DismissCard(int cardIndex)
+
+FloatingCardManager.DismissCard(int cardIndex)
+	First we consume a banish yadda yadda things we don't care about
+	Set cardReward to the cardReward of the current card
+		CHECK SetupCards() TO FIGURE OUT WHAT EXACTLY THESE CARD REWARDS ARE
+	Set preselectedItem to the preselectedItem of the current card
+	If cardReward is null, we skip all the upcoming shit and just remove the card from the screen
+	If preselectedItem is null
+	
+
+SetupCards()
+	Looks like each card is chosen randomly from AllAvailableCards based on the weight of each card
+	Looks like a single card contains a loot table, so multiple drops share a card but not all drops
+	Looks like a single card contains all information about the buff, so there isn't just a card that buffs (well duh)
+	We want to find how banishing affects AllAvailableCards
+
+
+I mean fuck, shit, there's some kinda random chance that a card becomes "preselected," whatever that means. These cards are treated entirely separately, but it looks like they're the same cards?

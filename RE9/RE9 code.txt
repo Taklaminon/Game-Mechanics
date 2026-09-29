@@ -1,0 +1,3 @@
+G = sun
+C = star
+U = moon

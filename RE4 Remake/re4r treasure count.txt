@@ -1,0 +1,66 @@
+mask- 1+1
+flagon- 2
+butterfly lamp- 2
+crown- 3
+lynx- 2
+clock- 2
+splendid bangle- 2
+chalice- 1+1
+necklace- 4
+elegant bangle- 2
+
+2 round- 4 
+3 round- 3+1 
+crown- 3 
+2 square- 2 
+3 square- 1+1 
+2r, 1s- 2 
+1r, 1s- 2 
+2r, 2s- 4 
+
+mask and chalice are sold by merchant
+
+gems-
+yellow- 12+1
+sapphire- 11 + indefinite
+ruby- 19 + idk
+emerald- 16 (requires you to kill both chainsaws
+beryl- 12+1
+alexandrite- 11
+
+
+allocation
+beryl:
+3 for crowns
+8 for 2r2s
+2 for lynxes
+
+yellow:
+3 for crowns
+9 for 3 round
++1 seems kinda useless
+
+alexandrite:
+3 for crowns
+3 for chalice
+3 for merchant chalice
+2 for splendid
+
+ruby:
+8 for 2r2s
+4 for lynxes
+7 for sale
+
+sapphire:
+3 for 3 round
+8 for 2 round
+3 for crown
+2 for clocks
+everything past 16 for sale
+easy 0 risk strategy: number of sapphires you can sell = number of sapphires dropped by bugs-5
+
+emerald:
+3 for crown
+2 for splendid
+2 for clocks
+9 for sale

@@ -1,0 +1,28 @@
+recoil is handled by PlayWeaponShootAnimation
+First call UpdateKickStrength, which sets kickStrengthCam to KickMultiplier*KickPower
+base amount of ammo consumed affects recoil, but I'm not sure that this applies for any of the weapons
+
+run cameraRecoil.Recoil with the kickStrengthCam multiplied by a mystery value "num"
+	num is calculated with a lerp from 1 to 0.6 with the parameter "timeShootingRecoil"
+		this value decreases by 2 each second while trigger is not active
+		it increased by 1 each second while the trigger is active until it hits the max
+		So, KickStrengthCam is multiplied by a value that starts at 1 and decreases to 0.6 over time.
+	cameraRecoil.Recoil adds the recoilAmount to "recoilToApply" and recoilToDecay
+		if the recoil would hit the top of the screen, cap the addition to recoilToDecay
+		if the recoil is over 89 degrees (wow), don't add anything to recoilToDecay
+		Set DecayTimer to 0
+
+CameraRecoil.LateUpdate handles the recoil given
+If recoilToApply>0
+	num = lerp from 1 to 40 based on recoilToApply/90 (remember, lerp clamps t value)
+	num2 = 45 * num * Time.deltaTime, clamped
+	Apply num2 recoil and subtract num2 from recoilToApply
+		effectively creates exponential decay, minus a constant 90/39
+If recoilToApply<=0 AND recoilToDecay>0
+	num3 = lerp from 1 to 40 based on recoilToDecay/90
+	num4 = decayTimer/0.75, clamped between 0 and 1
+	num5 = 30 * num3 * num4 * deltaTime
+	Apply -num5 recoil and subtract num5 from recoilToDecay
+
+
+y' = -y/39 + 1

@@ -1,0 +1,10 @@
+Windows are numbered counterclockwise from the first window that a zombie pops out of.
+
+
+start game: zombies spawn on windows 1, 2, 6, 
+grab bolt cutters: arms spawn
+
+defeat G1: zombies spawn on windows 8, 1, 2, 7, 3, 4
+Fall off ladder: zombie spawns on window 9
+
+It seems like that's all for Leon B?

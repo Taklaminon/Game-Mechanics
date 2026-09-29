@@ -1,0 +1,26 @@
+endless banishment
+if preselectedItem==null //it's not a "get specific thing" card
+	if preselectionChance==0 //it has a 0% chance of choosing a specific item instead of a random item
+		RemoveCardFromAvailableList(cardReward) //get rid of it
+	else if hasAvailableOptions //if it can spawn something
+		runtimePreselectionChance = 1 //make it always preselect
+else //it's a card that gives a preset item
+	cardReward.RemoveItem(preselectedItem) //get rid of that specific item but keep the card
+if !cardReward.HasAvailableOptions //if you either just removed the last option or it's a card that doesn't use options
+	RemoveCardFromAvailableList(cardReward) //get rid of it
+
+
+runtimePreselectionChance:
+	Looks like this is just the chance that you get "spawn <weapon name>" instead of "spawn a random weapon" for instance
+		set to 0.3 for most spawner cards
+
+All cards have an equal chance of appearing, except for infinite ammo and infinite durability, which have half the chance
+When a card that spawns something appears, it has a chance of "preselecting", meaning that it shows you what item will spawn before you choose it
+	random cooking station, and 5 random allies can never preselect
+	random item, specific item, valuable gear, summon NPC, several items, summon ally always preselect
+	If you banish a card that CAN preselect but didn't, the card will always preselect for the rest of the run
+	If you banish a card that DID preselect, it only removes that specific option from that specific card's item pool
+		If you banish the last remaining option of a card's item pool that card will never appear again
+	If you banish a card that CAN'T preselect but DOES have an item pool, that card will never appear again
+If you banish a card without an associated item pool, that card will never appear again
+As a final note, the gold laser sight is in the "valuable gear" loot table with every attachment and several sellables. There are 65 items in that pool.

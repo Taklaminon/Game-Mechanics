@@ -1,0 +1,5 @@
+When a bullet is shot from a normal gun
+	velocity = this.bulletSpeed * direction * (1 + force) / (asset mass + projectile mass)
+		this.bulletSpeed seems to be an unmodifiable value inherent to each gun, except for the gravita
+	timescale = ProjectileTimeScale
+		ProjectileTimeScale seems to be the stat altered by "bullet speed" modifiers

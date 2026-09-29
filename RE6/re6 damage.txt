@@ -1,0 +1,11 @@
+firearms multiplies damage by 1.5
+x hunter multiplies damage by 1.5
+They stack to multiply damage by 1.5*1.5 = 2.25
+
+mastery multiplies damage by 2
+firearms and mastery multiplies damage by 1.5*2 = 3
+
+Presumably, hunter, firearms, and mastery multiplies damage by 1.5*1.5*2 = 4.5 (untested)
+
+crits probably instantly kill. Otherwise, they have a multiplier so high that it always kills.
+head stomp never crits. It just does a lot of damage.

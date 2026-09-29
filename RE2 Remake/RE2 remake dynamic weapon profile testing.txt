@@ -1,0 +1,53 @@
+hp: 590
+drop: 229-239
+
+hp: 1130
+drop: 778-788, 421-431
+
+seems to always fake death after 350 damage. 
+Does this change if damage is dealt while faking death?
+
+it seems the first shot to wake an enemy up doesn't count towards the fake death counter
+none of the shots between dropping and startling awake count towards the fake death counter.
+
+shots during window climb animations don't count
+
+
+
+You don't actually need to land all pellets to get a head explosion. 
+You only need to land the center pellet, which has a spread of 0.02 to 0.04 radians depending on focus
+That's like 1-2 degrees
+You also need to be within a certain range, around 2 meters for the base shotgun and around 3 meters with the long barrel
+
+
+LHawk is a guaranteed head explosion at any distance
+also a guaranteed bisection at any distance
+can't cause fake death
+	
+Any guaranteed head explosion is a guaranteed bisection if you hit the torso. 
+	It is NOT a guaranteed limb break, but the break is often so high it works out anyway.
+
+
+flamethrower (zombies)
+ deals 16 ticks of 5 damage when an attack actually lands
+  if you have enough stacks on an enemy, they will turn black and take 16 ticks of 75 damage, a guaranteed kill on zombies
+   I'm pretty sure it's impossible to reach this point without the zombie having enough stacks to kill them already. Not certain, though.
+    got one where I hit the stack at 530 hp, so it's possible that it could've survived, especially on the higher difficulties.
+ when an attack lands, it has a chance to deal an additional 100 damage instantly
+  doesn't seem to depend on whether the enemy is already on fire
+ whether a projectile from the flamethrower actually does anything seems random, predetermined as you fire the weapon
+
+grenade launcher (fire, zombies)
+ applies a full stack (75x15) on direct hit
+  enough to kill any zombie on any difficulty
+ rapidly applies stacks to enemies in the flames
+
+grenade launcher (acid, zombies)
+ applies 10 stacks of 7 damage for 6 ticks. Total 420
+ also deals 200 contact damage (620)
+ fairly disappointing
+
+grenade launcher (acid, licker)
+ applies 10 stacks of 20 damage for 6 ticks, total 1200
+ also deals 200 contact damage (1400)
+ this will often almost kill a licker

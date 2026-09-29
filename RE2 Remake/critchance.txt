@@ -1,0 +1,13 @@
+How to calculate crit rate:
+
+Fire a large number of shots
+Find the amount of damage dealt along with the number of shots
+Find damage dealt on a crit and damage dealt on a normal shot
+
+totalDamage = shots*cRate*cDamage + shots*(1-cRate)*nDamage
+totalDamage/shots = cRate*cDamage + nDamage - cRate*nDamage
+cRate * cDamage - cRate*nDamage = totalDamage/shots - nDamage
+cRate * (cDamage - nDamage) = totalDamage/shots - nDamage
+cRate = (totalDamage/shots - nDamage)/(cDamage-nDamage)
+
+crit rate in your sample will be (the average damage dealt minus the damage of a normal shot) divided by the difference between critical and normal damage.

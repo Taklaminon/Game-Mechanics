@@ -1,0 +1,4123 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using EZCameraShake;
+using I2.Loc;
+using PerfectRandom.Sulfur.Core.Audio;
+using PerfectRandom.Sulfur.Core.CharacterStats;
+using PerfectRandom.Sulfur.Core.Effects;
+using PerfectRandom.Sulfur.Core.Items;
+using PerfectRandom.Sulfur.Core.Movement;
+using PerfectRandom.Sulfur.Core.Stats;
+using PerfectRandom.Sulfur.Core.UI;
+using PerfectRandom.Sulfur.Core.Units;
+using PerfectRandom.Sulfur.Core.Units.AI;
+using PerfectRandom.Sulfur.Core.Utilities;
+using Sonity;
+using Sonity.Internal;
+using Unity.Mathematics;
+using UnityEngine;
+
+namespace PerfectRandom.Sulfur.Core.Weapons
+{
+	// Token: 0x02000325 RID: 805
+	public class Weapon : Holdable, IDamager
+	{
+		// Token: 0x17000333 RID: 819
+		// (get) Token: 0x06001299 RID: 4761 RVA: 0x00068866 File Offset: 0x00066A66
+		public WeaponState CurrentAnimationType
+		{
+			get
+			{
+				return this.currentAnimationType;
+			}
+		}
+
+		// Token: 0x17000334 RID: 820
+		// (get) Token: 0x0600129A RID: 4762 RVA: 0x0006886E File Offset: 0x00066A6E
+		// (set) Token: 0x0600129B RID: 4763 RVA: 0x00068876 File Offset: 0x00066A76
+		public float bulletSpeed { get; set; }
+
+		// Token: 0x17000335 RID: 821
+		// (get) Token: 0x0600129C RID: 4764 RVA: 0x0006887F File Offset: 0x00066A7F
+		// (set) Token: 0x0600129D RID: 4765 RVA: 0x00068887 File Offset: 0x00066A87
+		public int iAmmoCurrent { get; set; }
+
+		// Token: 0x17000336 RID: 822
+		// (get) Token: 0x0600129E RID: 4766 RVA: 0x00068890 File Offset: 0x00066A90
+		// (set) Token: 0x0600129F RID: 4767 RVA: 0x00068898 File Offset: 0x00066A98
+		public int lastConsumptionAmount { get; set; }
+
+		// Token: 0x17000337 RID: 823
+		// (get) Token: 0x060012A0 RID: 4768 RVA: 0x000688A1 File Offset: 0x00066AA1
+		// (set) Token: 0x060012A1 RID: 4769 RVA: 0x000688A9 File Offset: 0x00066AA9
+		public bool InAlternativeState { get; set; }
+
+		// Token: 0x17000338 RID: 824
+		// (get) Token: 0x060012A2 RID: 4770 RVA: 0x000688B2 File Offset: 0x00066AB2
+		public float ParryAngle
+		{
+			get
+			{
+				return this.parryAngle;
+			}
+		}
+
+		// Token: 0x060012A3 RID: 4771 RVA: 0x000688BA File Offset: 0x00066ABA
+		public bool CanParry(MeleeParryTypes parryType)
+		{
+			return this.currentParries > 0 && (parryType & this.activeParryTypes) > MeleeParryTypes.None;
+		}
+
+		// Token: 0x060012A4 RID: 4772 RVA: 0x000688D4 File Offset: 0x00066AD4
+		public void Parry(MeleeParryTypes parryType, Unit attackingUnit)
+		{
+			int a = 0;
+			int b = this.currentParries - 1;
+			this.currentParries = b;
+			this.currentParries = Mathf.Max(a, b);
+			base.Animator.SetTrigger("Parry");
+			base.Animator.SetInteger("ParryAmount", this.currentParries);
+			GameObject original;
+			if (this.weaponDefinition.id == ItemIds.Weapon_Bo && this.onlyRangedParryAvailable)
+			{
+				original = this.weaponDefinition.parryEffectPrefab;
+			}
+			else
+			{
+				original = (this.InAlternativeState ? this.weaponDefinition.alternativeParryEffectPrefab : this.weaponDefinition.parryEffectPrefab);
+			}
+			Object.Instantiate<GameObject>(original, base.transform.position, base.transform.rotation, StaticInstance<GameManager>.Instance.effectRoot);
+			CameraShaker.Instance.Shake(CameraShakePresets.Bump);
+			StaticInstance<GamepadRumble>.Instance.Vibrate(this.weaponDefinition.rumbleValidParry, 1f);
+			NunchakuMeleeWeaponHelper nunchakuMeleeWeaponHelper;
+			if (parryType == MeleeParryTypes.Melee && base.TryGetComponent<NunchakuMeleeWeaponHelper>(out nunchakuMeleeWeaponHelper))
+			{
+				nunchakuMeleeWeaponHelper.ParriedNpc = attackingUnit;
+			}
+		}
+
+		// Token: 0x060012A5 RID: 4773 RVA: 0x000689DA File Offset: 0x00066BDA
+		public void SetMagazinePrefab(MagazineType magazineType)
+		{
+			if (magazineType == MagazineType.Default)
+			{
+				this.activeMagPrefab = this.magPrefab;
+				return;
+			}
+			this.activeMagPrefab = this.magPrefabAlternative;
+		}
+
+		// Token: 0x060012A6 RID: 4774 RVA: 0x000689F8 File Offset: 0x00066BF8
+		protected void SetActiveEjectionPort(WeaponSide ejectionPort)
+		{
+			this.activelyControlEjectionPorts = true;
+			this.activeEjectionPort = ejectionPort;
+		}
+
+		// Token: 0x17000339 RID: 825
+		// (get) Token: 0x060012A7 RID: 4775 RVA: 0x00068A08 File Offset: 0x00066C08
+		public WeaponSO weaponDefinition
+		{
+			get
+			{
+				return (WeaponSO)base.ItemDefinition;
+			}
+		}
+
+		// Token: 0x060012A8 RID: 4776 RVA: 0x00068A15 File Offset: 0x00066C15
+		public override string ToString()
+		{
+			if (base.ItemDefinition != null && base.ItemDefinition is WeaponSO)
+			{
+				return "Weapon " + this.weaponDefinition.displayName;
+			}
+			return base.gameObject.name;
+		}
+
+		// Token: 0x1700033A RID: 826
+		// (get) Token: 0x060012A9 RID: 4777 RVA: 0x00068A53 File Offset: 0x00066C53
+		// (set) Token: 0x060012AA RID: 4778 RVA: 0x00068A5B File Offset: 0x00066C5B
+		public bool WasTriggerActive
+		{
+			get
+			{
+				return this.bWasTriggerActive;
+			}
+			set
+			{
+				this.bWasTriggerActive = value;
+			}
+		}
+
+		// Token: 0x1700033B RID: 827
+		// (get) Token: 0x060012AB RID: 4779 RVA: 0x00068A64 File Offset: 0x00066C64
+		// (set) Token: 0x060012AC RID: 4780 RVA: 0x00068A6C File Offset: 0x00066C6C
+		public bool DropDisabledMoney { get; private set; }
+
+		// Token: 0x1700033C RID: 828
+		// (get) Token: 0x060012AD RID: 4781 RVA: 0x00068A75 File Offset: 0x00066C75
+		// (set) Token: 0x060012AE RID: 4782 RVA: 0x00068A7D File Offset: 0x00066C7D
+		public bool DropDisabledOrgan { get; private set; }
+
+		// Token: 0x1700033D RID: 829
+		// (get) Token: 0x060012AF RID: 4783 RVA: 0x00068A86 File Offset: 0x00066C86
+		// (set) Token: 0x060012B0 RID: 4784 RVA: 0x00068A8E File Offset: 0x00066C8E
+		public bool DisableMuzzleFlash { get; private set; }
+
+		// Token: 0x1700033E RID: 830
+		// (get) Token: 0x060012B1 RID: 4785 RVA: 0x00068A97 File Offset: 0x00066C97
+		public int ShootEventsSinceIdle
+		{
+			get
+			{
+				return this.shootEventsSinceIdle;
+			}
+		}
+
+		// Token: 0x1700033F RID: 831
+		// (get) Token: 0x060012B2 RID: 4786 RVA: 0x00068A9F File Offset: 0x00066C9F
+		// (set) Token: 0x060012B3 RID: 4787 RVA: 0x00068AA7 File Offset: 0x00066CA7
+		public float cooldown { get; private set; }
+
+		// Token: 0x17000340 RID: 832
+		// (get) Token: 0x060012B4 RID: 4788 RVA: 0x00068AB0 File Offset: 0x00066CB0
+		// (set) Token: 0x060012B5 RID: 4789 RVA: 0x00068AB8 File Offset: 0x00066CB8
+		public float cooldownBeforeReload { get; private set; }
+
+		// Token: 0x17000341 RID: 833
+		// (get) Token: 0x060012B6 RID: 4790 RVA: 0x00068AC1 File Offset: 0x00066CC1
+		public Transform BarrelTransform
+		{
+			get
+			{
+				if (this.barrelTransformOverrides[(int)this.activeEjectionPort] != null)
+				{
+					return this.barrelTransformOverrides[(int)this.activeEjectionPort];
+				}
+				return this.barrelTransform;
+			}
+		}
+
+		// Token: 0x17000342 RID: 834
+		// (get) Token: 0x060012B7 RID: 4791 RVA: 0x00068AEC File Offset: 0x00066CEC
+		public Transform AimFromTransform
+		{
+			get
+			{
+				if (this.aimFromOverrides[(int)this.activeEjectionPort] != null)
+				{
+					return this.aimFromOverrides[(int)this.activeEjectionPort];
+				}
+				return null;
+			}
+		}
+
+		// Token: 0x17000343 RID: 835
+		// (get) Token: 0x060012B8 RID: 4792 RVA: 0x00068B12 File Offset: 0x00066D12
+		public CaliberTypes Caliber
+		{
+			get
+			{
+				if (base.inventoryItem != null)
+				{
+					return base.inventoryItem.CurrentCaliber;
+				}
+				return this.weaponDefinition.caliber;
+			}
+		}
+
+		// Token: 0x17000344 RID: 836
+		// (get) Token: 0x060012B9 RID: 4793 RVA: 0x00068B3C File Offset: 0x00066D3C
+		public ProjectileTypes ProjectileType
+		{
+			get
+			{
+				ProjectileTypes result = ProjectileTypes.None;
+				if (this.weaponDefinition != null)
+				{
+					result = this.weaponDefinition.projectileType;
+				}
+				if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileKinematicForce) > 0f)
+				{
+					result = ProjectileTypes.RPG;
+				}
+				return result;
+			}
+		}
+
+		// Token: 0x17000345 RID: 837
+		// (get) Token: 0x060012BA RID: 4794 RVA: 0x00068B7C File Offset: 0x00066D7C
+		// (set) Token: 0x060012BB RID: 4795 RVA: 0x00068B84 File Offset: 0x00066D84
+		public FullProjectileDescription lastFiredProjectile { get; set; }
+
+		// Token: 0x060012BC RID: 4796 RVA: 0x00068B90 File Offset: 0x00066D90
+		public void SetCurrentAnimationType(WeaponState state)
+		{
+			if (this.CurrentAnimationType == state)
+			{
+				return;
+			}
+			if (GlobalSettings.VerboseLoggingWeapons)
+			{
+				Debug.Log(string.Format("{0}: Changing current animation type to: {1} (from {2})", this, state, this.currentAnimationType));
+			}
+			this.currentAnimationType = state;
+			if (this.currentAnimationType != WeaponState.Idle)
+			{
+				this.SoundInspectStop();
+			}
+		}
+
+		// Token: 0x060012BD RID: 4797 RVA: 0x00068BE4 File Offset: 0x00066DE4
+		public void UpdateBulletVisability(bool basedOnPool)
+		{
+			GameObject[] array = this.magBulletGameObjects;
+			for (int i = 0; i < array.Length; i++)
+			{
+				array[i].SetActive(false);
+			}
+			MeshRenderer[] array2 = this.magBulletRenderers;
+			for (int i = 0; i < array2.Length; i++)
+			{
+				array2[i].enabled = false;
+			}
+			if (basedOnPool)
+			{
+				for (int j = 0; j < base.GetStoredAmmo(); j++)
+				{
+					if (j >= 20)
+					{
+						return;
+					}
+					if (j < this.magBulletGameObjects.Length)
+					{
+						this.magBulletGameObjects[j].SetActive(true);
+					}
+					if (j < this.magBulletRenderers.Length)
+					{
+						this.magBulletRenderers[j].enabled = true;
+					}
+				}
+			}
+			else
+			{
+				for (int k = 0; k < this.iAmmoCurrent; k++)
+				{
+					if (k < this.magBulletGameObjects.Length)
+					{
+						this.magBulletGameObjects[k].SetActive(true);
+					}
+					if (k < this.magBulletRenderers.Length)
+					{
+						this.magBulletRenderers[k].enabled = true;
+					}
+				}
+			}
+		}
+
+		// Token: 0x060012BE RID: 4798 RVA: 0x00068CC4 File Offset: 0x00066EC4
+		public void UpdateMagazineBasedOnAmmoPool()
+		{
+			base.Animator.SetInteger("AmmoCurrent", base.GetStoredAmmo());
+			base.Animator.SetFloat("AmmoInMag", (float)base.GetStoredAmmo());
+			this.UpdateBulletVisability(true);
+		}
+
+		// Token: 0x060012BF RID: 4799 RVA: 0x00068CFC File Offset: 0x00066EFC
+		public void UpdateMagazine()
+		{
+			base.Animator.SetInteger("AmmoCurrent", this.iAmmoCurrent);
+			base.Animator.SetFloat("AmmoInMag", (float)this.iAmmoCurrent);
+			base.Animator.SetInteger("AmmoPool", base.GetStoredAmmo());
+			this.UpdateBulletVisability(false);
+		}
+
+		// Token: 0x060012C0 RID: 4800 RVA: 0x00068D54 File Offset: 0x00066F54
+		private void Anim_UpdateMag()
+		{
+			this.ammoInStorage = base.GetStoredAmmo();
+			int num = this.iAmmoMax - this.iAmmoCurrent;
+			bool flag = false;
+			int num2 = this.iAmmoMax - this.bulletsPerReload;
+			if (this.iAmmoCurrent + this.bulletsPerReload > num2)
+			{
+				flag = true;
+			}
+			int num3 = (!flag && this.bulletsPerReload < num) ? this.bulletsPerReload : num;
+			if (this.reloadFullIfEmpty && this.iAmmoCurrent == 0)
+			{
+				num3 = this.iAmmoMax;
+			}
+			float num4;
+			if (StaticInstance<GameManager>.Instance.PlayerUnit.Stats.TryGetAttribute(EntityAttributes.Status_OneInTheChamber, out num4))
+			{
+				num3 = 1;
+			}
+			int num5 = (this.ammoInStorage < num3) ? this.ammoInStorage : num3;
+			int currentAmmo = this.iAmmoCurrent + num5;
+			this.UpdateMag(currentAmmo);
+		}
+
+		// Token: 0x060012C1 RID: 4801 RVA: 0x00068E10 File Offset: 0x00067010
+		protected void UpdateMag(int currentAmmo)
+		{
+			if (this.magBulletGameObjects == null || currentAmmo > this.magBulletGameObjects.Length)
+			{
+				return;
+			}
+			for (int i = 0; i < this.magBulletGameObjects.Length; i++)
+			{
+				if (!(this.magBulletGameObjects[i] == null))
+				{
+					if (i < currentAmmo)
+					{
+						this.magBulletGameObjects[i].SetActive(true);
+					}
+					else
+					{
+						this.magBulletGameObjects[i].SetActive(false);
+					}
+				}
+			}
+		}
+
+		// Token: 0x060012C2 RID: 4802 RVA: 0x00068E78 File Offset: 0x00067078
+		public void SoundInspectPlay()
+		{
+			if (this.bOwnerIsNpc)
+			{
+				return;
+			}
+			if (this.soundInspect == null)
+			{
+				return;
+			}
+			if (this.soundInspect.GetSoundEventState(base.transform) == SoundEventState.NotPlaying)
+			{
+				this.soundInspect.Play(base.transform, new SoundParameterInternals[]
+				{
+					this.soundParameterIncrease2D
+				});
+			}
+		}
+
+		// Token: 0x060012C3 RID: 4803 RVA: 0x00068ED0 File Offset: 0x000670D0
+		public void SoundInspectStop()
+		{
+			if (this.bOwnerIsNpc)
+			{
+				return;
+			}
+			if (this.soundInspect == null)
+			{
+				return;
+			}
+			this.soundInspect.Stop(base.transform, true);
+		}
+
+		// Token: 0x060012C4 RID: 4804 RVA: 0x00068EFC File Offset: 0x000670FC
+		public void SoundInspectPause()
+		{
+			if (this.bOwnerIsNpc)
+			{
+				return;
+			}
+			if (this.soundInspect == null)
+			{
+				return;
+			}
+			if (this.soundInspect.GetSoundEventState(base.transform) == SoundEventState.Playing)
+			{
+				this.soundInspect.Pause(base.transform, false);
+			}
+		}
+
+		// Token: 0x060012C5 RID: 4805 RVA: 0x00068F3C File Offset: 0x0006713C
+		public void SoundInspectUnpause()
+		{
+			if (this.bOwnerIsNpc)
+			{
+				return;
+			}
+			if (this.soundInspect == null)
+			{
+				return;
+			}
+			if (this.soundInspect.GetSoundEventState(base.transform) == SoundEventState.Paused)
+			{
+				this.soundInspect.Unpause(base.transform);
+			}
+		}
+
+		// Token: 0x17000346 RID: 838
+		// (get) Token: 0x060012C6 RID: 4806 RVA: 0x00068F7B File Offset: 0x0006717B
+		public bool IsCaliberModded
+		{
+			get
+			{
+				if (base.inventoryItem != null)
+				{
+					return base.inventoryItem.IsCaliberModded;
+				}
+				return this.weaponDefinition.isCaliberModded;
+			}
+		}
+
+		// Token: 0x17000347 RID: 839
+		// (get) Token: 0x060012C7 RID: 4807 RVA: 0x00068FA2 File Offset: 0x000671A2
+		public bool IsSilenced
+		{
+			get
+			{
+				return base.ItemStats != null && base.ItemStats.GetAttribute(ItemAttributes.Silenced) > 0f;
+			}
+		}
+
+		// Token: 0x17000348 RID: 840
+		// (get) Token: 0x060012C8 RID: 4808 RVA: 0x00068FC2 File Offset: 0x000671C2
+		private bool HasPlayEffectShootSound
+		{
+			get
+			{
+				return base.ItemStats != null && base.ItemStats.GetAttribute(ItemAttributes.ShootEffectSoundOnly) > 0f;
+			}
+		}
+
+		// Token: 0x17000349 RID: 841
+		// (get) Token: 0x060012C9 RID: 4809 RVA: 0x00068FE2 File Offset: 0x000671E2
+		public bool HasPlayEffectImpactSound
+		{
+			get
+			{
+				return base.ItemStats != null && base.ItemStats.GetAttribute(ItemAttributes.ImpactEffectSoundOnly) > 0f;
+			}
+		}
+
+		// Token: 0x060012CA RID: 4810 RVA: 0x00069002 File Offset: 0x00067202
+		public void CreateMag()
+		{
+			Object.Instantiate<GameObject>(this.activeMagPrefab, this.magCreateTransform.position, this.magCreateTransform.rotation, StaticInstance<GameManager>.Instance.effectRoot);
+		}
+
+		// Token: 0x1700034A RID: 842
+		// (get) Token: 0x060012CB RID: 4811 RVA: 0x00069030 File Offset: 0x00067230
+		public bool IsFullAutoEnabled
+		{
+			get
+			{
+				return base.ItemStats != null && base.ItemStats.GetAttribute(ItemAttributes.FullAuto) > 0f;
+			}
+		}
+
+		// Token: 0x060012CC RID: 4812 RVA: 0x00069050 File Offset: 0x00067250
+		protected override void PlaySelectAnimation()
+		{
+			if (this.isReloading)
+			{
+				return;
+			}
+			base.PlaySelectAnimation();
+		}
+
+		// Token: 0x1700034B RID: 843
+		// (get) Token: 0x060012CD RID: 4813 RVA: 0x00069061 File Offset: 0x00067261
+		public Vector3 AimAtPosition
+		{
+			get
+			{
+				return this.aimAtPosition;
+			}
+		}
+
+		// Token: 0x1700034C RID: 844
+		// (get) Token: 0x060012CE RID: 4814 RVA: 0x00069069 File Offset: 0x00067269
+		// (set) Token: 0x060012CF RID: 4815 RVA: 0x00069071 File Offset: 0x00067271
+		public Vector3 AimAtGeometryPosition { get; protected set; }
+
+		// Token: 0x1700034D RID: 845
+		// (get) Token: 0x060012D0 RID: 4816 RVA: 0x0006907A File Offset: 0x0006727A
+		// (set) Token: 0x060012D1 RID: 4817 RVA: 0x00069082 File Offset: 0x00067282
+		public List<Unit> hitUnitsMelee { get; protected set; }
+
+		// Token: 0x1700034E RID: 846
+		// (get) Token: 0x060012D2 RID: 4818 RVA: 0x0006908B File Offset: 0x0006728B
+		// (set) Token: 0x060012D3 RID: 4819 RVA: 0x00069093 File Offset: 0x00067293
+		public int meleeHitsGiven { get; private set; }
+
+		// Token: 0x1700034F RID: 847
+		// (get) Token: 0x060012D4 RID: 4820 RVA: 0x0006909C File Offset: 0x0006729C
+		public int MeleeHitsPerAttackMax
+		{
+			get
+			{
+				if (this.InAlternativeState)
+				{
+					return this.meleeHitsPerAttackAlternativeMax;
+				}
+				return this.meleeHitsPerAttackMax;
+			}
+		}
+
+		// Token: 0x17000350 RID: 848
+		// (get) Token: 0x060012D5 RID: 4821 RVA: 0x000690B3 File Offset: 0x000672B3
+		public bool IsMelee
+		{
+			get
+			{
+				return this.weaponDefinition != null && this.weaponDefinition.weaponType == WeaponTypes.Melee;
+			}
+		}
+
+		// Token: 0x060012D6 RID: 4822 RVA: 0x000690D4 File Offset: 0x000672D4
+		protected virtual void Start()
+		{
+			this.SetupAttributeReferences();
+			this.activeMagPrefab = this.magPrefab;
+			this.isReloading = false;
+			this.cameraRecoil = base.GetComponentInParent<CameraRecoil>();
+			base.gameObject.name = base.gameObject.name.Replace("(Clone)", "");
+			this.hitUnitsMelee = new List<Unit>();
+			if (this.meleeCollider == null)
+			{
+				this.meleeCollider = base.GetComponentInChildren<MeleeCollider>();
+			}
+			if (base.Animator)
+			{
+				base.Animator.ResetTrigger("Reload");
+			}
+			this.SetupRenderers();
+			this.Initialize();
+		}
+
+		// Token: 0x060012D7 RID: 4823 RVA: 0x0006917C File Offset: 0x0006737C
+		private void SetupRenderers()
+		{
+			Shader weaponShader = StaticInstance<GameManager>.Instance.weaponShader;
+			Shader weaponShaderTriplanar = StaticInstance<GameManager>.Instance.weaponShaderTriplanar;
+			this.meshRenderersInWeapon.Clear();
+			GameObject[] array = this.weaponRendererParent;
+			for (int i = 0; i < array.Length; i++)
+			{
+				Renderer[] componentsInChildren = array[i].GetComponentsInChildren<Renderer>(true);
+				for (int j = 0; j < componentsInChildren.Length; j++)
+				{
+					if ((componentsInChildren[j] is MeshRenderer || componentsInChildren[j] is SkinnedMeshRenderer || componentsInChildren[j] is SpriteRenderer) && (componentsInChildren[j].sharedMaterial.shader.name == weaponShader.name || componentsInChildren[j].sharedMaterial.shader.name == weaponShaderTriplanar.name))
+					{
+						this.meshRenderersInWeapon.Add(componentsInChildren[j]);
+					}
+				}
+			}
+		}
+
+		// Token: 0x060012D8 RID: 4824 RVA: 0x0006925C File Offset: 0x0006745C
+		protected override void SetupStats()
+		{
+			base.SetupStats();
+			this.SetupAttributeReferences();
+			if (this.weaponDefinition != null)
+			{
+				this.isThrowable = this.weaponDefinition.IsThrowable;
+				this.bulletSpeed = this.weaponDefinition.bulletSpeed;
+				this.firesByTrigger = this.weaponDefinition.firesByTrigger;
+				this.reloadWithButton = this.weaponDefinition.reloadWithButton;
+				this.iAmmoMax = this.weaponDefinition.iAmmoMax;
+				if (this.bulletsPerReload == 0)
+				{
+					this.bulletsPerReload = this.weaponDefinition.iAmmoMax;
+				}
+				this.fReloadTime = this.weaponDefinition.fReloadTime;
+				this.iMaxAmmoPerShot = this.weaponDefinition.iMaxAmmoPerShot;
+				this.cooldown = ((this.weaponDefinition.rpm != 0) ? (60f / (float)this.weaponDefinition.rpm) : 0f);
+				this.cooldownBeforeReload = this.weaponDefinition.cooldownBeforeReload;
+				this.automaticReload = this.weaponDefinition.automaticReload;
+				this.maxParries = this.weaponDefinition.maxParries;
+				this.maxAlternativeParries = this.weaponDefinition.maxAlternativeParries;
+				this.parryAngle = this.weaponDefinition.parryAngle;
+				this.meleeHitsPerAttackMax = this.weaponDefinition.meleeHitsPerAttackMax;
+				this.meleeHitsPerAttackAlternativeMax = this.weaponDefinition.meleeHitsPerAttackAlternativeMax;
+				if (!(base.inventoryItem != null) || base.inventoryItem.stats == null)
+				{
+					this.enemyWeaponStats = new ItemStats();
+					this.enemyWeaponStats.SetBaseAttributes(this.weaponDefinition);
+				}
+				this.compatibleAttachments = this.GetCompatibleAttachments();
+				if (base.inventoryItem)
+				{
+					base.inventoryItem.SetCompatibleAttachments(this.compatibleAttachments);
+				}
+				this.SyncEnchantments(true);
+				this.SyncAttachments();
+				this.playerController = base.GetComponentInParent<ExtendedAdvancedWalkerController>();
+				return;
+			}
+			Debug.LogWarning(base.gameObject.name + " is missing a reference to it's scriptable object. Set it up in the weapon prefab.");
+		}
+
+		// Token: 0x060012D9 RID: 4825 RVA: 0x0006944E File Offset: 0x0006764E
+		public void ChargeMelee(bool state)
+		{
+			if (state)
+			{
+				this.hitUnitsMelee.Clear();
+				StaticInstance<GamepadRumble>.Instance.Vibrate(this.weaponDefinition.rumbleCharge, 1f);
+			}
+			base.Animator.SetBool("Charge", state);
+		}
+
+		// Token: 0x060012DA RID: 4826 RVA: 0x00069489 File Offset: 0x00067689
+		public bool IsMeleeCharging()
+		{
+			return base.Animator.GetBool("Charge");
+		}
+
+		// Token: 0x060012DB RID: 4827 RVA: 0x0006949C File Offset: 0x0006769C
+		public void SyncDurabilityEffects(bool checkConditions)
+		{
+			float durabilityNormalized = base.inventoryItem.DurabilityNormalized;
+			base.Animator.SetBool("IsBroken", durabilityNormalized == 0f);
+			if (durabilityNormalized == 0f)
+			{
+				this.SetWashedOutValueAndDurabilty(0.5f, durabilityNormalized, checkConditions);
+				return;
+			}
+			this.SetWashedOutValueAndDurabilty(0f, durabilityNormalized, checkConditions);
+		}
+
+		// Token: 0x060012DC RID: 4828 RVA: 0x000694F0 File Offset: 0x000676F0
+		private void ToggleDamageEffectList(GameObject[] list, bool state)
+		{
+			if (list != null)
+			{
+				foreach (GameObject gameObject in list)
+				{
+					if (gameObject != null)
+					{
+						gameObject.SetActive(state);
+					}
+				}
+			}
+		}
+
+		// Token: 0x060012DD RID: 4829 RVA: 0x00069524 File Offset: 0x00067724
+		private void SetWashedOutValueAndDurabilty(float washedOutRatio, float durability, bool checkConditions)
+		{
+			bool flag = Mathf.Abs(washedOutRatio - this.lastWashedOutRatio) > 0.05f;
+			bool flag2 = Mathf.Abs(durability - this.lastDurability) > 0.05f;
+			if (checkConditions && !flag && !flag2)
+			{
+				return;
+			}
+			if (this.weaponRendererParent == null || this.weaponRendererParent.Length == 0)
+			{
+				return;
+			}
+			this.lastWashedOutRatio = washedOutRatio;
+			this.lastDurability = durability;
+			foreach (Renderer renderer in this.meshRenderersInWeapon)
+			{
+				Material material = renderer.material;
+				material.SetColor("_Tint", Color.Lerp(Color.white, this.washedOutColor, washedOutRatio));
+				material.SetFloat("_Saturation", 1f - washedOutRatio);
+				material.SetFloat("_DamageBlend", 1f - durability);
+			}
+		}
+
+		// Token: 0x060012DE RID: 4830 RVA: 0x00069608 File Offset: 0x00067808
+		public void OverrideBarrelTransform(Transform t, WeaponSide weaponSide)
+		{
+			if (weaponSide == WeaponSide.Left)
+			{
+				this.barrelTransformOverrides[0] = t;
+				return;
+			}
+			this.barrelTransformOverrides[1] = t;
+		}
+
+		// Token: 0x060012DF RID: 4831 RVA: 0x00069620 File Offset: 0x00067820
+		public void OverrideAimFrom(Transform t, WeaponSide weaponSide)
+		{
+			if (weaponSide == WeaponSide.Left)
+			{
+				this.aimFromOverrides[0] = t;
+				return;
+			}
+			this.aimFromOverrides[1] = t;
+		}
+
+		// Token: 0x060012E0 RID: 4832 RVA: 0x00069638 File Offset: 0x00067838
+		public void OverrideDamage(bool state, float value = 0f)
+		{
+			if (state)
+			{
+				this.overrideDamage = value;
+				return;
+			}
+			this.overrideDamage = 0f;
+		}
+
+		// Token: 0x060012E1 RID: 4833 RVA: 0x00069650 File Offset: 0x00067850
+		public void SetStats(int currentAmmo)
+		{
+			this.iAmmoCurrent = currentAmmo;
+		}
+
+		// Token: 0x060012E2 RID: 4834 RVA: 0x00069659 File Offset: 0x00067859
+		public void SetDamageColliderState(int state)
+		{
+			if (state == 0)
+			{
+				this.damageColliderActive = false;
+				return;
+			}
+			this.meleeHitsGiven = 0;
+			this.damageColliderActive = true;
+			StaticInstance<GamepadRumble>.Instance.Vibrate(this.weaponDefinition.rumbleAttack, 1f);
+		}
+
+		// Token: 0x060012E3 RID: 4835 RVA: 0x0006968E File Offset: 0x0006788E
+		public void SetSlashColliderState(int state)
+		{
+			this.SetDamageColliderState(state);
+			if (this.meleeCollider != null)
+			{
+				this.meleeCollider.AttackSweep();
+			}
+		}
+
+		// Token: 0x060012E4 RID: 4836 RVA: 0x000696B0 File Offset: 0x000678B0
+		public void TriggerMeleeHit()
+		{
+			this.meleeHitsGiven = 0;
+			this.meleeCollider.HitEnemiesInCollider(this.owner.PlayerScript);
+		}
+
+		// Token: 0x060012E5 RID: 4837 RVA: 0x000696CF File Offset: 0x000678CF
+		public void ClearColliderHits()
+		{
+			this.hitUnitsMelee.Clear();
+		}
+
+		// Token: 0x060012E6 RID: 4838 RVA: 0x000696DC File Offset: 0x000678DC
+		public void SetAlternativeState(int i)
+		{
+			this.InAlternativeState = (i == 1);
+			this.onlyRangedParryAvailable = false;
+			if (this.InAlternativeState)
+			{
+				if (this.weaponDefinition.alternativeModAppliedOnOwner != null && this.weaponDefinition.alternativeModAppliedOnOwner.Count > 0)
+				{
+					this.owner.Stats.AddModifiersFromList(this.weaponDefinition.alternativeModAppliedOnOwner, this.weaponDefinition.id.AsGlobalId(0));
+				}
+				if (this.weaponDefinition.alternativeModAppliedOnWeapon != null && this.weaponDefinition.alternativeModAppliedOnWeapon.Count > 0)
+				{
+					base.inventoryItem.stats.AddModifiersFromList(this.weaponDefinition.alternativeModAppliedOnWeapon, this.weaponDefinition.id.AsGlobalId(0));
+				}
+				this.currentParries = this.maxAlternativeParries;
+				this.activeParryTypes = this.weaponDefinition.alternativeTypeToParry;
+				return;
+			}
+			if (this.weaponDefinition.alternativeModAppliedOnOwner != null && this.weaponDefinition.alternativeModAppliedOnOwner.Count > 0)
+			{
+				this.owner.Stats.RemoveModifiersFromList(this.weaponDefinition.alternativeModAppliedOnOwner, this.weaponDefinition.id.AsGlobalId(0));
+			}
+			if (this.weaponDefinition.alternativeModAppliedOnWeapon != null && this.weaponDefinition.alternativeModAppliedOnWeapon.Count > 0)
+			{
+				base.inventoryItem.stats.RemoveModifiersFromList(this.weaponDefinition.alternativeModAppliedOnWeapon, this.weaponDefinition.id.AsGlobalId(0));
+			}
+			this.currentParries = this.maxParries;
+			this.activeParryTypes = this.weaponDefinition.typeToParry;
+		}
+
+		// Token: 0x060012E7 RID: 4839 RVA: 0x00069888 File Offset: 0x00067A88
+		public void ActivateBoSpinParries()
+		{
+			this.currentParries = 10;
+			this.activeParryTypes = MeleeParryTypes.Ranged;
+			this.onlyRangedParryAvailable = true;
+		}
+
+		// Token: 0x060012E8 RID: 4840 RVA: 0x000698A0 File Offset: 0x00067AA0
+		public void ClearParries()
+		{
+			this.currentParries = 0;
+		}
+
+		// Token: 0x060012E9 RID: 4841 RVA: 0x000698AC File Offset: 0x00067AAC
+		public void RegisterCaliberModelVisual(CaliberModelVisual visual)
+		{
+			if (this.caliberModelVisuals == null)
+			{
+				this.caliberModelVisuals = new Dictionary<CaliberType, List<CaliberModelVisual>>();
+			}
+			if (!this.caliberModelVisuals.ContainsKey(visual.CaliberType))
+			{
+				this.caliberModelVisuals.Add(visual.CaliberType, new List<CaliberModelVisual>());
+			}
+			this.caliberModelVisuals[visual.CaliberType].Add(visual);
+		}
+
+		// Token: 0x060012EA RID: 4842 RVA: 0x0006990C File Offset: 0x00067B0C
+		public void SyncCaliberModels()
+		{
+			if (this.bOwnerIsNpc)
+			{
+				return;
+			}
+			if (this.caliberModelVisuals == null)
+			{
+				CaliberModelVisual[] componentsInChildren = base.GetComponentsInChildren<CaliberModelVisual>(true);
+				for (int i = 0; i < componentsInChildren.Length; i++)
+				{
+					componentsInChildren[i].Setup(this);
+				}
+			}
+			if (this.caliberModelVisuals == null)
+			{
+				return;
+			}
+			foreach (List<CaliberModelVisual> list in this.caliberModelVisuals.Values)
+			{
+				if (list[0].CaliberType.id == this.Caliber)
+				{
+					using (List<CaliberModelVisual>.Enumerator enumerator2 = list.GetEnumerator())
+					{
+						while (enumerator2.MoveNext())
+						{
+							CaliberModelVisual caliberModelVisual = enumerator2.Current;
+							caliberModelVisual.Show();
+						}
+						continue;
+					}
+				}
+				foreach (CaliberModelVisual caliberModelVisual2 in list)
+				{
+					caliberModelVisual2.Hide();
+				}
+			}
+			this.UpdateMag(this.iAmmoCurrent);
+		}
+
+		// Token: 0x060012EB RID: 4843 RVA: 0x00069A3C File Offset: 0x00067C3C
+		public void SyncAttachments()
+		{
+			if (this.bOwnerIsNpc)
+			{
+				return;
+			}
+			WeaponAttachmentVisual[] componentsInChildren = base.GetComponentsInChildren<WeaponAttachmentVisual>(true);
+			for (int i = 0; i < componentsInChildren.Length; i++)
+			{
+				componentsInChildren[i].SetAttachedTo(this);
+				componentsInChildren[i].Hide();
+			}
+			foreach (WeaponAttachmentVisual weaponAttachmentVisual in componentsInChildren)
+			{
+				bool flag = false;
+				if (weaponAttachmentVisual.laserSightSwapper != null)
+				{
+					for (int k = 0; k < base.inventoryItem.attachments.Count; k++)
+					{
+						if (weaponAttachmentVisual.laserSightSwapper.HasItemId(base.inventoryItem.attachments[k].id))
+						{
+							weaponAttachmentVisual.laserSightSwapper.Apply(base.inventoryItem.attachments[k].id);
+							weaponAttachmentVisual.Show();
+							flag = true;
+							break;
+						}
+					}
+				}
+				if (!flag && base.inventoryItem.HasAttachment(weaponAttachmentVisual.attachmentDefinition))
+				{
+					weaponAttachmentVisual.Show();
+				}
+			}
+		}
+
+		// Token: 0x060012EC RID: 4844 RVA: 0x00069B30 File Offset: 0x00067D30
+		public WeaponAttachmentSlot AttachmentSlotForItem(ItemDefinition attachmentItem)
+		{
+			WeaponAttachmentVisual[] componentsInChildren = base.GetComponentsInChildren<WeaponAttachmentVisual>(true);
+			if (attachmentItem.id == ItemIds.Attachment_Insurance)
+			{
+				return WeaponAttachmentSlot.Insurance;
+			}
+			for (int i = 0; i < componentsInChildren.Length; i++)
+			{
+				if (componentsInChildren[i].laserSightSwapper != null && componentsInChildren[i].laserSightSwapper.HasItemId(attachmentItem.id))
+				{
+					return componentsInChildren[i].AttachmentSlot;
+				}
+				if (componentsInChildren[i].attachmentDefinition != null && componentsInChildren[i].attachmentDefinition.id == attachmentItem.id)
+				{
+					return componentsInChildren[i].AttachmentSlot;
+				}
+			}
+			return WeaponAttachmentSlot.None;
+		}
+
+		// Token: 0x060012ED RID: 4845 RVA: 0x00069BCC File Offset: 0x00067DCC
+		public bool HasAttachmentInSlot(WeaponAttachmentSlot slot)
+		{
+			if (slot == WeaponAttachmentSlot.Insurance)
+			{
+				return base.inventoryItem.HasAttachment(ItemIds.Attachment_Insurance.GetAsset());
+			}
+			foreach (WeaponAttachmentVisual weaponAttachmentVisual in base.GetComponentsInChildren<WeaponAttachmentVisual>(true))
+			{
+				if (weaponAttachmentVisual.AttachmentSlot == slot && weaponAttachmentVisual.gameObject.activeSelf)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		// Token: 0x060012EE RID: 4846 RVA: 0x0000218A File Offset: 0x0000038A
+		private void SetupAttributeReferences()
+		{
+		}
+
+		// Token: 0x060012EF RID: 4847 RVA: 0x00069C28 File Offset: 0x00067E28
+		public void SyncEnchantments(bool ignoreOwnerIsNpc = true)
+		{
+			if (ignoreOwnerIsNpc && this.bOwnerIsNpc)
+			{
+				return;
+			}
+			float attribute = base.ItemStats.GetAttribute(ItemAttributes.RPM);
+			if (base.ItemStats.GetAttribute(ItemAttributes.RPM) != 0f)
+			{
+				float num = attribute / (float)this.weaponDefinition.rpm;
+				this.cooldown = 60f / attribute;
+				this.animationSpeedModifier = num;
+			}
+			this.reloadSpeed = base.ItemStats.GetAttribute(ItemAttributes.ReloadSpeed);
+			if (base.ItemStats.GetAttribute(ItemAttributes.DisableADS) > 0f)
+			{
+				this.aimingDisabled = true;
+			}
+			this.DisableMuzzleFlash = (base.ItemStats.GetAttribute(ItemAttributes.DisableMuzzleFlash) > 0f);
+			this.SyncOnHitEffects();
+		}
+
+		// Token: 0x060012F0 RID: 4848 RVA: 0x00069CD3 File Offset: 0x00067ED3
+		private void AddAttributeModifier(EntityAttributes attribute, StatModType modType, float value, float procChance, bool disableEffectActivation)
+		{
+			ProcModifierContainer procModifierContainer = new ProcModifierContainer();
+			procModifierContainer.attribute = attribute;
+			procModifierContainer.modType = modType;
+			procModifierContainer.value = value;
+			procModifierContainer.procChance = procChance;
+			procModifierContainer.disableEffectActivation = disableEffectActivation;
+		}
+
+		// Token: 0x060012F1 RID: 4849 RVA: 0x00069D00 File Offset: 0x00067F00
+		private void SyncOnHitEffects()
+		{
+			for (int i = 0; i < base.ItemStats.activeItemAttributes.Count; i++)
+			{
+				int num = base.ItemStats.activeItemAttributes[i];
+				if (base.ItemStats.itemAttributes[num].Value != 0f)
+				{
+					ItemAttribute asset = ((ItemAttributes)num).GetAsset();
+					if (asset.spawnOnStartShoot != null && asset.spawnOnStartShoot.effect != null)
+					{
+						this.spawnOnStartShoot = asset.spawnOnStartShoot;
+					}
+					if (asset.bloodDecalOnEnvironmentHit != BloodType.Normal)
+					{
+						this.bloodDecalOnEnvironmentHit = asset.bloodDecalOnEnvironmentHit;
+					}
+					if (asset.replacesBloodType != BloodType.Normal)
+					{
+						this.replacesBloodType = asset.replacesBloodType;
+					}
+				}
+			}
+		}
+
+		// Token: 0x17000351 RID: 849
+		// (get) Token: 0x060012F2 RID: 4850 RVA: 0x00069DAF File Offset: 0x00067FAF
+		public bool AimingPossible
+		{
+			get
+			{
+				return !this.aimingDisabled && this.weaponDefinition.adsEnabled;
+			}
+		}
+
+		// Token: 0x060012F3 RID: 4851 RVA: 0x00069DC8 File Offset: 0x00067FC8
+		public float GetCritChance()
+		{
+			float attribute = this.owner.Stats.GetAttribute(EntityAttributes.Stat_CritChance);
+			float attribute2 = base.ItemStats.GetAttribute(ItemAttributes.CritChance);
+			float num = attribute + attribute2;
+			if (this.bIsAimingDownSight)
+			{
+				num += base.ItemStats.GetAttribute(ItemAttributes.CritChanceADS);
+				num += this.owner.Stats.GetAttribute(EntityAttributes.Stat_CritChanceADS);
+			}
+			return num;
+		}
+
+		// Token: 0x060012F4 RID: 4852 RVA: 0x00069E24 File Offset: 0x00068024
+		public void ReportMeleeHit(Hitmesh hit = null)
+		{
+			this.hitUnitsMelee.Add(hit.owner);
+			if (!hit.owner.isInvulnerable && hit.owner.IsAlive)
+			{
+				this.meleeHitsGiven++;
+			}
+			if (this.meleeHitsGiven >= this.MeleeHitsPerAttackMax)
+			{
+				this.SetDamageColliderState(0);
+			}
+			Weapon.OnWeaponHit onWeaponHit = this.onHit;
+			if (onWeaponHit == null)
+			{
+				return;
+			}
+			onWeaponHit(hit);
+		}
+
+		// Token: 0x060012F5 RID: 4853 RVA: 0x00069E90 File Offset: 0x00068090
+		private Color GetMuzzleFlareColor()
+		{
+			if (this.effectOnProjectile != ProjectileEffect.None)
+			{
+				return this.effectOnProjectile.GetAsset().mainColor;
+			}
+			return this.weaponDefinition.muzzleFlashColor;
+		}
+
+		// Token: 0x060012F6 RID: 4854 RVA: 0x00069EB8 File Offset: 0x000680B8
+		private void UpdateAmmoCurrentInAnimator()
+		{
+			if (this.iAmmoCurrent == 1 && base.Animator)
+			{
+				base.Animator.SetBool("LastBullet", true);
+			}
+			if (base.Animator)
+			{
+				base.Animator.SetBool("BulletAmountEven", this.iAmmoCurrent % 2 == 0);
+			}
+			if (this.iAmmoCurrent == 0 && base.Animator)
+			{
+				base.Animator.SetBool("GunEmpty", true);
+			}
+			if (base.Animator != null)
+			{
+				base.Animator.SetInteger("BulletsLeft", this.iAmmoCurrent);
+				base.Animator.SetInteger("AmmoCurrent", this.iAmmoCurrent);
+				base.Animator.SetInteger("AmmoPool", base.GetStoredAmmo());
+			}
+		}
+
+		// Token: 0x060012F7 RID: 4855 RVA: 0x00069F8C File Offset: 0x0006818C
+		public void ShootFromAnimation()
+		{
+			if (GlobalSettings.VerboseLoggingWeapons)
+			{
+				base.Animator.GetCurrentAnimatorStateInfo(0);
+				AnimatorClipInfo[] currentAnimatorClipInfo = base.Animator.GetCurrentAnimatorClipInfo(0);
+				string arg = (currentAnimatorClipInfo.Length != 0) ? currentAnimatorClipInfo[0].clip.name : "<no clip>";
+				Debug.Log(string.Format("[AnimationEvent] {0}: ShootFromAnimation() called from: {1}", this.weaponDefinition, arg));
+			}
+			this.Shoot();
+		}
+
+		// Token: 0x060012F8 RID: 4856 RVA: 0x00069FF4 File Offset: 0x000681F4
+		public virtual void Shoot()
+		{
+			this.shootEventsSinceIdle++;
+			this.triggerIdleTimer = 0f;
+			this.rpmCooldownRoutine = base.StartCoroutine(this.cooldownRoutine());
+			bool flag = !this.weaponDefinition.IsMelee;
+			bool flag2 = true;
+			float attribute = base.ItemStats.GetAttribute(ItemAttributes.ConsumeAmmoChance);
+			float num = UnityEngine.Random.Range(0f, 1f);
+			if (!this.bOwnerIsNpc && StaticInstance<GameManager>.Instance.GodMode)
+			{
+				flag2 = false;
+			}
+			else if (attribute < num)
+			{
+				flag2 = false;
+			}
+			if (this.iMaxAmmoPerShot == 0)
+			{
+				Debug.LogWarning(string.Format("{0} has a iMaxAmmoPerShot which is set to 0.", this));
+			}
+			int num2 = (this.iAmmoCurrent < this.iMaxAmmoPerShot) ? this.iAmmoCurrent : this.iMaxAmmoPerShot;
+			int num3 = 0;
+			float attribute2 = base.ItemStats.GetAttribute(ItemAttributes.ConsumeExtraAmmoChance);
+			float num4 = UnityEngine.Random.Range(0f, 1f);
+			bool flag3 = attribute2 > num4;
+			StaticInstance<GamepadRumble>.Instance.Vibrate(this.weaponDefinition.rumbleAttack, 1f);
+			if (flag3)
+			{
+				num3++;
+				if (num2 + num3 > this.iAmmoCurrent)
+				{
+					this.ModifyStoredAmmo(-num3);
+				}
+			}
+			if (flag)
+			{
+				this.lastConsumptionAmount = 0;
+				if (!this.bOwnerIsNpc && StaticInstance<GameManager>.Instance.GodMode)
+				{
+					if (base.Animator)
+					{
+						base.Animator.SetBool("Satiety", false);
+					}
+				}
+				else if (flag2)
+				{
+					int num5 = Mathf.Clamp(this.iAmmoCurrent - (num2 + num3), 0, 99999);
+					this.lastConsumptionAmount = this.iAmmoCurrent - num5;
+					this.iAmmoCurrent = num5;
+					if (base.Animator)
+					{
+						if (base.Animator.ContainsParameter("FireRight"))
+						{
+							bool value = (this.iAmmoCurrent + this.lastConsumptionAmount) % 2 == 0;
+							base.Animator.SetBool("FireRight", value);
+						}
+						base.Animator.SetBool("Satiety", false);
+					}
+				}
+				else
+				{
+					if (!this.firesByTrigger)
+					{
+						this.ReclaimAmmoToStorage();
+					}
+					if (base.Animator)
+					{
+						base.Animator.SetBool("Satiety", true);
+					}
+				}
+				this.UpdateAmmoCurrentInAnimator();
+			}
+			this.PlayWeaponShootAnimation(num2);
+			this.UpdateBarrelAndAim();
+			if (base.Animator)
+			{
+				base.Animator.Update(0f);
+			}
+			if (flag)
+			{
+				int num6 = (int)base.ItemStats.GetAttribute(ItemAttributes.ProjectileAmount);
+				int num7 = num6 * num2;
+				float num8;
+				if (base.ItemStats.TryGetAttribute(ItemAttributes.EnchantmentRemoveBullets, out num8) && num8 > 0f)
+				{
+					num7 = 0;
+				}
+				if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileDark) > 0f)
+				{
+					this.calculatedDarkDamage = base.ItemStats.GetAttribute(ItemAttributes.ProjectileDark);
+					float attribute3 = base.ItemStats.GetAttribute(ItemAttributes.ProjectileChaosStrike);
+					if (attribute3 > 0f)
+					{
+						float num9 = UnityEngine.Random.Range(0f, attribute3);
+						float num10 = this.calculatedDarkDamage * num9;
+						this.calculatedDarkDamage += num10;
+					}
+					this.calculatedDarkDamage /= (float)num7;
+				}
+				if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileMoveAsSpray) > 0f)
+				{
+					base.StartCoroutine(this.SprayProjectiles(num7 * 7, 0.2f));
+				}
+				else
+				{
+					for (int i = 0; i < num7; i++)
+					{
+						this.DispatchProjectile();
+					}
+				}
+				float num11;
+				if (base.ItemStats.TryGetAttribute(ItemAttributes.EnchantmentSelfDamage, out num11) && num11 > 0f)
+				{
+					float damage = Mathf.Abs(num11 / 0.5f) * (float)num6 * (float)num2;
+					this.owner.ReceiveDamage(damage, DamageTypes.Normal, this, Hitmesh.Data.Default, null);
+				}
+				float num12;
+				if (base.ItemStats.TryGetAttribute(ItemAttributes.EnchantmentDamageAoe, out num12) && num12 > 0f)
+				{
+					float num14;
+					float num13 = (base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileScale, out num14) && num14 > 1f) ? Mathf.Sqrt(num14) : 1f;
+					this.DoDamageAroundYou(num12, 15f * num13, num6 * num2);
+				}
+				float num15;
+				if (base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileSacrifice, out num15) && num15 > 0f)
+				{
+					this.ShootSacrificeBullets(num15, num7);
+				}
+				if (!this.bOwnerIsNpc)
+				{
+					base.inventoryItem.TakeDurabilityLossFromShoot();
+				}
+				if (!this.DisableMuzzleFlash)
+				{
+					MuzzleFlashTypes muzzleFlashTypes = MuzzleFlashTypes.None;
+					if (this.bIsAimingDownSight)
+					{
+						if (this.muzzleFlareADS != MuzzleFlashTypes.None)
+						{
+							muzzleFlashTypes = this.muzzleFlareADS;
+						}
+					}
+					else if (this.muzzleFlare != MuzzleFlashTypes.None)
+					{
+						muzzleFlashTypes = this.muzzleFlare;
+					}
+					if (muzzleFlashTypes != MuzzleFlashTypes.None)
+					{
+						bool mirror = this.activelyControlEjectionPorts && this.activeEjectionPort == WeaponSide.Left;
+						this.equipmentManager.ShowMuzzleFlash(muzzleFlashTypes, this.BarrelTransform, this.GetMuzzleFlareColor(), this.weaponDefinition.muzzleFlashScale, mirror);
+					}
+				}
+			}
+			this.SpawnOnStartShoot();
+			this.SoundShot(num2);
+			this.UpdateAmmo();
+			base.StartCoroutine(this.BeforeReloadCooldown());
+		}
+
+		// Token: 0x060012F9 RID: 4857 RVA: 0x0006A49C File Offset: 0x0006869C
+		private IEnumerator SprayProjectiles(int projectileCount, float duration = 0.2f)
+		{
+			if (projectileCount <= 1)
+			{
+				this.DispatchProjectile();
+				yield break;
+			}
+			float startTime = Time.time;
+			float endTime = startTime + duration;
+			this.DispatchProjectile();
+			float timeBetweenProjectiles = duration / (float)(projectileCount - 1);
+			int num4;
+			for (int i = 1; i < projectileCount; i = num4 + 1)
+			{
+				float num = startTime + (float)i * timeBetweenProjectiles;
+				if (i < projectileCount - 1)
+				{
+					float num2 = UnityEngine.Random.Range(-0.3f, 0.3f) * timeBetweenProjectiles;
+					num += num2;
+					num = Mathf.Min(num, endTime - (float)(projectileCount - i - 1) * timeBetweenProjectiles * 0.7f);
+					num = Mathf.Max(num, Time.time);
+				}
+				else
+				{
+					num = endTime;
+				}
+				float num3 = num - Time.time;
+				if (num3 > 0f)
+				{
+					yield return new WaitForSeconds(num3);
+				}
+				this.DispatchProjectile();
+				num4 = i;
+			}
+			yield break;
+		}
+
+		// Token: 0x060012FA RID: 4858 RVA: 0x0006A4BC File Offset: 0x000686BC
+		private void PlayWeaponShootAnimation(int ammoFired)
+		{
+			if (!this.bOwnerIsNpc)
+			{
+				this.UpdateKickStrength(ammoFired);
+			}
+			if (this.shootScreenShake.magnitude != 0f)
+			{
+				StaticInstance<EffectsManager>.Instance.ScreenShakeOnce(this.shootScreenShake.magnitude, this.shootScreenShake.roughness, this.shootScreenShake.fadeInTime, this.shootScreenShake.fadeOutTime);
+			}
+			if (this.cameraRecoil != null)
+			{
+				float num = Mathf.Lerp(1f, 0.6f, this.timeShootingRecoil / this.timeShootingRecoilMax);
+				if (this.bIsAimingDownSight)
+				{
+					this.cameraRecoil.Recoil(this.kickStrengthCam * num);
+				}
+				else
+				{
+					this.cameraRecoil.Recoil(this.kickStrengthCam * num);
+				}
+			}
+			if (base.Animator)
+			{
+				if (this.bIsAimingDownSight)
+				{
+					base.Animator.SetFloat("Firepower", 0.25f + UnityEngine.Random.Range(-0.1f, 0.1f));
+				}
+				else
+				{
+					base.Animator.SetFloat("Firepower", 0.5f + UnityEngine.Random.Range(-0.1f, 0.1f));
+				}
+				base.Animator.SetTrigger("Fire");
+				base.Animator.Update(0f);
+			}
+			this.SetCurrentAnimationType(WeaponState.Fire);
+			this.UpdateAnimatorSettings();
+		}
+
+		// Token: 0x060012FB RID: 4859 RVA: 0x0006A60C File Offset: 0x0006880C
+		protected virtual void UpdateKickStrength(int ammoFired)
+		{
+			if (base.inventoryItem.CurrentCaliber == CaliberTypes.None)
+			{
+				return;
+			}
+			float value = Mathf.Clamp(base.ItemStats.GetAttribute(ItemAttributes.KickMultiplier) * base.inventoryItem.KickPower, 0f, 999f);
+			this.kickStrengthAnim = Mathf.Clamp(value, 0.01f, 0.99f);
+			this.kickStrengthCam = value;
+		}
+
+		// Token: 0x060012FC RID: 4860 RVA: 0x0006A670 File Offset: 0x00068870
+		public void OnCaliberMod()
+		{
+			base.ItemStats.SetAttributeBaseValue(ItemAttributes.ProjectileAmount, (float)this.Caliber.GetAsset().numberOfProjectiles);
+			this.ReclaimAmmoToStorage();
+			this.SyncCaliberModels();
+			base.Animator.SetTrigger("Chisel");
+			base.Animator.SetBool("GunEmpty", true);
+			base.Animator.SetInteger("AmmoCurrent", 0);
+		}
+
+		// Token: 0x060012FD RID: 4861 RVA: 0x0006A6DC File Offset: 0x000688DC
+		public void OnRankUp()
+		{
+			StaticInstance<SoundBankUI>.Instance.PlayClip(UISounds.UI_RankUp);
+			string translation = LocalizationManager.GetTranslation("Announcements/RankedUp", true, 0, true, false, null, null, true);
+			if (translation != null)
+			{
+				string alertText = translation.Replace("ITEM_X", this.weaponDefinition.LocalizedDisplayName);
+				StaticInstance<UIManager>.Instance.ShowSmallAlert(alertText, 3.5f);
+			}
+		}
+
+		// Token: 0x060012FE RID: 4862 RVA: 0x0006A730 File Offset: 0x00068930
+		public float GetExperience()
+		{
+			return base.inventoryItem.GetExperience();
+		}
+
+		// Token: 0x060012FF RID: 4863 RVA: 0x0006A73D File Offset: 0x0006893D
+		public void AddExperience(float experienceIncrease)
+		{
+			if (this.IsThrowable)
+			{
+				return;
+			}
+			if (this.weaponDefinition.IsMelee)
+			{
+				return;
+			}
+			base.inventoryItem.AddExperience(experienceIncrease);
+		}
+
+		// Token: 0x06001300 RID: 4864 RVA: 0x0006A764 File Offset: 0x00068964
+		protected void EjectCasing()
+		{
+			Transform transform;
+			if (!this.activelyControlEjectionPorts)
+			{
+				this.casingTransformID++;
+				if (this.casingTransformID >= this.casingEjectTransform.Length)
+				{
+					this.casingTransformID = 0;
+				}
+				transform = this.casingEjectTransform[this.casingTransformID];
+			}
+			else
+			{
+				transform = this.casingEjectTransform[(int)this.activeEjectionPort];
+			}
+			if (transform != null)
+			{
+				this.originalEjectionPortRotation = transform.rotation;
+				GameObject gameObject;
+				if (StaticInstance<AutoPool>.Instance.TryGetCasingFromQueue(this.Caliber, out gameObject))
+				{
+					Vector3 position = transform.position;
+					Rigidbody component = gameObject.GetComponent<Rigidbody>();
+					BulletShellDrop component2 = gameObject.GetComponent<BulletShellDrop>();
+					float num;
+					component.position = WeaponRendererFeature.FOVAdjustedMuzzlePosition_DistanceCorrect(base.owningPlayer, position, this.weaponDefinition.FOVDepthPlacement, out num);
+					component.rotation = this.BarrelTransform.rotation;
+					gameObject.transform.position = component.position;
+					gameObject.transform.rotation = component.rotation;
+					WeaponRendererFeature.AddCasingRenderers(component2, num * this.casingPrefabScaleMultiplier);
+					component.AddForce(transform.forward * UnityEngine.Random.Range(this.casingEjectForceRange.x, this.casingEjectForceRange.y), ForceMode.Impulse);
+					component.AddTorque(UnityEngine.Random.rotation.eulerAngles * UnityEngine.Random.Range(this.casingEjectAngularForceRange.x, this.casingEjectAngularForceRange.x), ForceMode.Impulse);
+				}
+				transform.rotation = this.originalEjectionPortRotation;
+				return;
+			}
+			Debug.LogWarning(base.ItemDefinition.displayName + " has a casing eject transform which is null (defined in \"" + base.gameObject.name + "\" prefab). Fix it or it will not eject casings.");
+		}
+
+		// Token: 0x17000352 RID: 850
+		// (get) Token: 0x06001301 RID: 4865 RVA: 0x0006A8F8 File Offset: 0x00068AF8
+		public bool IsThrowable
+		{
+			get
+			{
+				return this.isThrowable;
+			}
+		}
+
+		// Token: 0x06001302 RID: 4866 RVA: 0x0006A900 File Offset: 0x00068B00
+		public void HideModel()
+		{
+			if (this.modelObject)
+			{
+				this.modelObject.SetActive(false);
+			}
+		}
+
+		// Token: 0x06001303 RID: 4867 RVA: 0x0006A91B File Offset: 0x00068B1B
+		public void RegisterEffectFromProjectile(ProjectileEffect effect)
+		{
+			this.effectOnProjectile = effect;
+		}
+
+		// Token: 0x06001304 RID: 4868 RVA: 0x0006A924 File Offset: 0x00068B24
+		public List<ModifierContainer> CalculateProjectileModifiers()
+		{
+			List<ModifierContainer> list = new List<ModifierContainer>();
+			List<ProcModifierContainer> list2 = new List<ProcModifierContainer>();
+			if (base.owningNpc != null && base.owningNpc.modifiersOnHitOverride != null && base.owningNpc.modifiersOnHitOverride.Count > 0)
+			{
+				list2 = base.owningNpc.modifiersOnHitOverride;
+			}
+			else if (this.IsMelee)
+			{
+				NunchakuMeleeWeaponHelper nunchakuMeleeWeaponHelper;
+				if (base.TryGetComponent<NunchakuMeleeWeaponHelper>(out nunchakuMeleeWeaponHelper))
+				{
+					list2.AddRange(nunchakuMeleeWeaponHelper.cachedNunchakusModsOnHit);
+				}
+				if (this.InAlternativeState && this.weaponDefinition.alternativeModOnHit != null)
+				{
+					list2.AddRange(this.weaponDefinition.alternativeModOnHit);
+				}
+				else if (!this.InAlternativeState && this.weaponDefinition.modOnHit != null)
+				{
+					list2.AddRange(this.weaponDefinition.modOnHit);
+				}
+			}
+			foreach (ProcModifierContainer procModifierContainer in list2)
+			{
+				float num = (float)UnityEngine.Random.Range(0, 100);
+				float num3;
+				if (this.Caliber != CaliberTypes.None)
+				{
+					CaliberType asset = this.Caliber.GetAsset();
+					float num2 = 1f;
+					if (asset.numberOfProjectiles == 1)
+					{
+						num2 = 1f;
+					}
+					else if (asset.numberOfProjectiles == 8)
+					{
+						num2 = 0.5f;
+					}
+					else if (this.weaponDefinition.id == ItemIds.Weapon_Augusta)
+					{
+						num2 = 0.8f;
+					}
+					num3 = procModifierContainer.procChance * num2;
+				}
+				else
+				{
+					num3 = procModifierContainer.procChance;
+				}
+				if (num < num3)
+				{
+					list.Add(procModifierContainer);
+				}
+			}
+			return list;
+		}
+
+		// Token: 0x06001305 RID: 4869 RVA: 0x0006AAB4 File Offset: 0x00068CB4
+		private List<DamageComponent> CalculatedDamageComponents()
+		{
+			List<DamageComponent> list = new List<DamageComponent>();
+			float damage = this.GetDamage();
+			list.Add(new DamageComponent(this.GetDamageType(), damage));
+			if (UnityEngine.Random.Range(0f, 1f) < this.GetCritChance())
+			{
+				list.Add(new DamageComponent(DamageTypes.Critical, damage));
+			}
+			if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileApplyFire) == 1f)
+			{
+				list.Add(new DamageComponent(DamageTypes.Fire, 10f));
+			}
+			base.ItemStats.GetAttribute(ItemAttributes.ProjectileApplyElectricity);
+			if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileApplyFrost) == 1f)
+			{
+				list.Add(new DamageComponent(DamageTypes.Frost, 1f));
+			}
+			if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileDark) > 0f)
+			{
+				list.Add(new DamageComponent(DamageTypes.Dark, this.calculatedDarkDamage));
+			}
+			return list;
+		}
+
+		// Token: 0x17000353 RID: 851
+		// (get) Token: 0x06001306 RID: 4870 RVA: 0x0006AB8C File Offset: 0x00068D8C
+		public float SpreadStrength
+		{
+			get
+			{
+				if ((int)base.ItemStats.GetAttribute(ItemAttributes.ProjectileAmount) > 1)
+				{
+					return 1f;
+				}
+				if (this.weaponDefinition.shotsToReachFullSpread == 0)
+				{
+					return 1f;
+				}
+				return Mathf.Lerp(0.67f, 1f, (float)(this.shootEventsSinceIdle / this.weaponDefinition.shotsToReachFullSpread));
+			}
+		}
+
+		// Token: 0x17000354 RID: 852
+		// (get) Token: 0x06001307 RID: 4871 RVA: 0x0006ABE8 File Offset: 0x00068DE8
+		public float computedSpread
+		{
+			get
+			{
+				if (this.bOwnerIsNpc)
+				{
+					return Mathf.Clamp(base.ItemStats.GetAttribute(ItemAttributes.Spread), 0f, 100f);
+				}
+				if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileMoveAsSpray) > 0f)
+				{
+					return Mathf.Clamp(base.ItemStats.GetAttribute(ItemAttributes.Spread), 0f, 100f) * this.SpreadStrength;
+				}
+				return Mathf.Clamp(base.ItemStats.GetAttribute(ItemAttributes.Spread), 0f, 100f) * this.AimValue * this.SpreadStrength * this.holdSpreadDecreaseMultiplier;
+			}
+		}
+
+		// Token: 0x17000355 RID: 853
+		// (get) Token: 0x06001308 RID: 4872 RVA: 0x0006AC85 File Offset: 0x00068E85
+		public float AimValue
+		{
+			get
+			{
+				return this.aimValueCurrent;
+			}
+		}
+
+		// Token: 0x06001309 RID: 4873 RVA: 0x0006AC90 File Offset: 0x00068E90
+		private void DoAimValueUpdate()
+		{
+			this.aimValueTarget = this.AimMovementMultiplier;
+			if (this.aimValueCurrent == this.aimValueTarget)
+			{
+				return;
+			}
+			if (this.aimValueTarget > this.aimValueCurrent)
+			{
+				this.aimValueCurrent += Time.deltaTime * this.aimValueChangeSpeedUp;
+				if (this.aimValueCurrent > this.aimValueTarget)
+				{
+					this.aimValueCurrent = this.aimValueTarget;
+					return;
+				}
+			}
+			else if (this.aimValueTarget < this.aimValueCurrent)
+			{
+				this.aimValueCurrent -= Time.deltaTime * this.aimValueChangeSpeedDown;
+				if (this.aimValueCurrent < this.aimValueTarget)
+				{
+					this.aimValueCurrent = this.aimValueTarget;
+				}
+			}
+		}
+
+		// Token: 0x17000356 RID: 854
+		// (get) Token: 0x0600130A RID: 4874 RVA: 0x0006AD3C File Offset: 0x00068F3C
+		private float aimPenalty
+		{
+			get
+			{
+				float num = base.ItemStats.GetAttribute(ItemAttributes.AimMovingBonus) - 1f;
+				float num2 = this.owner.Stats.GetAttribute(EntityAttributes.Stat_AimMovingBonus) - 1f;
+				float num3 = num + num2;
+				return 1f - num3;
+			}
+		}
+
+		// Token: 0x17000357 RID: 855
+		// (get) Token: 0x0600130B RID: 4875 RVA: 0x0006AD80 File Offset: 0x00068F80
+		public float AimMovementMultiplier
+		{
+			get
+			{
+				if (this.playerController == null)
+				{
+					return 1f;
+				}
+				bool flag = this.playerController.GetMovementVelocity().sqrMagnitude < 1f;
+				if (this.bIsAimingDownSight)
+				{
+					if (flag || this.playerController.isCrouching)
+					{
+						return 0.5f;
+					}
+					return 0.5f + this.aimPenalty;
+				}
+				else
+				{
+					if (flag || this.playerController.isCrouching)
+					{
+						return 1f;
+					}
+					return 1f + this.aimPenalty;
+				}
+			}
+		}
+
+		// Token: 0x0600130C RID: 4876 RVA: 0x0006AE0C File Offset: 0x0006900C
+		protected void DispatchProjectile()
+		{
+			Weapon.OnFire onFire = this.onFire;
+			if (onFire != null)
+			{
+				onFire();
+			}
+			if (!this.IsThrowable)
+			{
+				this.owner.SetLastUsedWeapon(this);
+			}
+			Debug.DrawRay(this.BarrelTransform.position, this.BarrelTransform.forward, Color.white, 1f);
+			if (base.owningPlayer != null)
+			{
+				this.BarrelTransform.LookAt(this.aimAtPosition, this.BarrelTransform.up);
+				Debug.DrawLine(this.BarrelTransform.position, this.aimAtPosition, Color.magenta, 1f);
+			}
+			else
+			{
+				this.AimAt(base.owningNpc.GetAimPosition());
+			}
+			ProjectileTypes projectileType = this.ProjectileType;
+			ProjectileDefinition asset = projectileType.GetAsset();
+			Vector3 randomDirectionInCode = Helpers.GetRandomDirectionInCode(this.computedSpread, this.BarrelTransform.forward);
+			Vector3 a = this.bulletSpeed * randomDirectionInCode;
+			if (projectileType == ProjectileTypes.RPG)
+			{
+				a = randomDirectionInCode;
+			}
+			Vector3 v;
+			if (this.bOwnerIsNpc)
+			{
+				a *= 0.25f;
+				v = this.BarrelTransform.position;
+			}
+			else
+			{
+				v = this.aimPosition + this.owner.Rigidbody.linearVelocity * this.equipmentManager.compensationModifier;
+			}
+			a *= 1f + base.ItemStats.GetAttribute(ItemAttributes.ProjectileForce);
+			if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileMoveAsSpray) > 0f)
+			{
+				a *= UnityEngine.Random.Range(0.7f, 1.3f);
+			}
+			if (a.sqrMagnitude < 0.001f)
+			{
+				a = randomDirectionInCode;
+			}
+			float num = 0.05f;
+			float num2;
+			if (base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileScale, out num2))
+			{
+				num *= num2;
+			}
+			float num3 = asset.mass + base.ItemStats.GetAttribute(ItemAttributes.ProjectileMass);
+			float drag = asset.drag + base.ItemStats.GetAttribute(ItemAttributes.ProjectileDrag);
+			float value;
+			float timeScale = base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileTimeScale, out value) ? Mathf.Clamp(value, 0.01f, 10f) : 1f;
+			ProjectileRay projectileRay = new ProjectileRay(v, projectileType)
+			{
+				velocity = a / num3,
+				color = new float3(1f, 1f, 1f),
+				coreColor = new float3(1f, 1f, 1f),
+				shotOrLastBounceFrom = this.BarrelTransform.position,
+				barrelPosition = this.BarrelTransform.position,
+				radius = num,
+				startTime = Time.time,
+				mass = num3,
+				drag = drag,
+				timeScale = timeScale,
+				createBulletHoles = (asset.createBulletHoles && base.ItemStats.GetAttribute(ItemAttributes.ProjectileTurnOffBulletHoles) == 0f),
+				drawDefaultBullet = true,
+				playImpactSounds = true,
+				effect = ProjectileEffect.None
+			};
+			float rhs;
+			if (base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileGravityFactor, out rhs))
+			{
+				projectileRay.gravity *= rhs;
+			}
+			if (this.owner.isPlayer)
+			{
+				projectileRay.ownerInstID = base.owningPlayer.hitboxCollider.GetInstanceID();
+			}
+			else
+			{
+				projectileRay.ownerInstID = base.owningNpc.hitmeshCollider.GetInstanceID();
+			}
+			AttackStates states = new AttackStates
+			{
+				replacesBloodType = this.replacesBloodType,
+				factionId = this.owner.FactionId,
+				effectScale = projectileRay.EffectScale,
+				increaseHeadshotDamage = base.ItemStats.GetAttribute(ItemAttributes.EnchantmentIncreaseHeadshotDamage),
+				alwaysSpawnOrgans = (base.ItemStats.GetAttribute(ItemAttributes.EnchantmentAlwaysSpawnOrgan) > 0f),
+				corpseBounceExplosion = (base.ItemStats.GetAttribute(ItemAttributes.ProjectileOnHitCorpseExplosion) > 0f),
+				isSilenced = (base.ItemStats.GetAttribute(ItemAttributes.Silenced) > 0f),
+				dropDisabledMoney = (base.ItemStats.GetAttribute(ItemAttributes.DisableLootMoney) > 0f),
+				dropDisabledOrgan = (base.ItemStats.GetAttribute(ItemAttributes.DisableLootOrgans) > 0f)
+			};
+			ProjectileData projectileData = new ProjectileData
+			{
+				soundImpactOverride = asset.soundImpactOverride,
+				damageType = this.GetDamageType(),
+				ownerPosition = this.owner.transform.position,
+				sourceUnit = this.owner,
+				sourceWeapon = this,
+				isPlayer = this.owner.isPlayer,
+				caliber = this.Caliber
+			};
+			if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileVisualRocket) > 0f)
+			{
+				projectileRay.vfxAsset = VFX_Persistent.RPG;
+				projectileRay.drawDefaultBullet = false;
+			}
+			if (base.ItemStats.GetAttribute(ItemAttributes.Homing) > 0f)
+			{
+				projectileData.homingTarget = this.GetClosestUnitInViewport(StaticInstance<GameManager>.Instance.currentCamera, 0.2f, 25f);
+			}
+			if (this.weaponDefinition.projectileEffect != ProjectileEffect.None)
+			{
+				this.weaponDefinition.projectileEffect.GetAsset().ApplyToProjectile(ref projectileRay, ref projectileData);
+			}
+			if (projectileRay.ScaleFactor > 1f)
+			{
+				projectileRay.innerWidth *= projectileRay.ScaleFactor;
+				projectileRay.outerWidth *= projectileRay.ScaleFactor;
+			}
+			if (this.soundPlayerDamage != null)
+			{
+				states.onDamageSound = this.soundPlayerDamage;
+			}
+			else if (!this.owner.soundPlayerDamageDisable && this.owner.soundPlayerDamage != null)
+			{
+				states.onDamageSound = this.owner.soundPlayerDamage;
+			}
+			else if (asset.soundPlayerDamage != null)
+			{
+				states.onDamageSound = asset.soundPlayerDamage;
+			}
+			projectileData.states = states;
+			for (int i = 0; i < base.ItemStats.activeItemAttributes.Count; i++)
+			{
+				int num4 = base.ItemStats.activeItemAttributes[i];
+				CharacterStat characterStat = base.ItemStats.itemAttributes[num4];
+				if (characterStat.Value != 0f)
+				{
+					ItemAttributes itemAttributes = (ItemAttributes)num4;
+					ItemAttribute asset2 = itemAttributes.GetAsset();
+					if (asset2.spawnOnUnitHit.effect != null)
+					{
+						projectileData.onUnitHit = asset2.spawnOnUnitHit;
+					}
+					if (asset2.spawnOnEnvironmentHit.effect != null)
+					{
+						projectileData.onEnvionmentHit = asset2.spawnOnEnvironmentHit;
+					}
+					if (asset2.bloodDecalOnEnvironmentHit != BloodType.Normal)
+					{
+						projectileData.bloodDecalOnEnvironmentHit = asset2.bloodDecalOnEnvironmentHit;
+					}
+					if (asset2.explosionOnHit != ExplosionTypes.None)
+					{
+						projectileRay.explosionOnHit = asset2.explosionOnHit.GetAsset().data;
+						projectileRay.explosionOnHit.ownerID = this.owner.GetInstanceID();
+						projectileRay.explosionOnHit.scale = asset2.explosionScale;
+					}
+					if (asset2.applyAttributeModifier.attribute != EntityAttributes.None)
+					{
+						float value2 = asset2.applyAttributeModifier.applyItemDefinitionValue ? characterStat.Value : asset2.applyAttributeModifier.value;
+						ModifierData modifierData = default(ModifierData);
+						modifierData.attribute = asset2.applyAttributeModifier.attribute;
+						modifierData.modType = asset2.applyAttributeModifier.modType;
+						modifierData.value = value2;
+						modifierData.procChance = asset2.applyAttributeModifier.procChance;
+						projectileData.modifiersOnHit.Add(modifierData);
+					}
+					if (projectileRay.effect == ProjectileEffect.None || projectileRay.effect == ProjectileEffect.Light)
+					{
+						ProjectileEffect projectileEffect = ProjectileEffect.None;
+						if (itemAttributes == ItemAttributes.ProjectilePrism)
+						{
+							ItemAttributes itemAttributes2 = ProjectileUtilities.PRISM_ATTRIBUTES[UnityEngine.Random.Range(0, ProjectileUtilities.PRISM_ATTRIBUTES.Length)];
+							ItemAttribute asset3 = itemAttributes2.GetAsset();
+							projectileEffect = StaticInstance<AsyncAssetLoading>.Instance.itemAttributeToProjEffects[(int)itemAttributes2];
+							if (asset3.applyAttributeModifier.attribute != EntityAttributes.None)
+							{
+								float value3 = asset3.applyAttributeModifier.applyItemDefinitionValue ? characterStat.Value : asset3.applyAttributeModifier.value;
+								ModifierData modifierData = default(ModifierData);
+								modifierData.attribute = asset3.applyAttributeModifier.attribute;
+								modifierData.modType = asset3.applyAttributeModifier.modType;
+								modifierData.value = value3;
+								modifierData.procChance = asset3.applyAttributeModifier.procChance;
+								projectileData.modifiersOnHit.Add(modifierData);
+							}
+						}
+						if (projectileEffect != ProjectileEffect.None)
+						{
+							projectileEffect.GetAsset().ApplyToProjectile(ref projectileRay, ref projectileData);
+						}
+					}
+				}
+			}
+			if (projectileRay.effect == ProjectileEffect.None && base.owningNpc != null && base.owningNpc.damageTypeOverride != DamageTypes.None)
+			{
+				int num5 = -1;
+				DamageTypes damageTypeOverride = base.owningNpc.damageTypeOverride;
+				switch (damageTypeOverride)
+				{
+				case DamageTypes.Electric:
+					num5 = 26;
+					break;
+				case DamageTypes.Explosive:
+					break;
+				case DamageTypes.Fire:
+					num5 = 28;
+					break;
+				case DamageTypes.Frost:
+					num5 = 29;
+					break;
+				default:
+					if (damageTypeOverride == DamageTypes.Poison)
+					{
+						num5 = 32;
+					}
+					break;
+				}
+				if (num5 >= 0)
+				{
+					ProjectileEffect projectileEffect2 = StaticInstance<AsyncAssetLoading>.Instance.itemAttributeToProjEffects[num5];
+					if (projectileEffect2 != ProjectileEffect.None)
+					{
+						projectileEffect2.GetAsset().ApplyToProjectile(ref projectileRay, ref projectileData);
+					}
+				}
+			}
+			if (base.owningNpc != null && base.owningNpc.modifiersOnHitOverride != null && base.owningNpc.modifiersOnHitOverride.Count > 0)
+			{
+				projectileData.modifiersOnHit.Clear();
+				for (int j = 0; j < base.owningNpc.modifiersOnHitOverride.Count; j++)
+				{
+					ModifierData modifierData = default(ModifierData);
+					modifierData.attribute = base.owningNpc.modifiersOnHitOverride[j].attribute;
+					modifierData.modType = base.owningNpc.modifiersOnHitOverride[j].modType;
+					modifierData.value = base.owningNpc.modifiersOnHitOverride[j].value;
+					modifierData.procChance = base.owningNpc.modifiersOnHitOverride[j].procChance;
+					projectileData.modifiersOnHit.Add(modifierData);
+				}
+			}
+			projectileData.soundAdditionalImpact = this.weaponDefinition.soundAdditionalImpact;
+			projectileData.soundFlyByOverride = this.weaponDefinition.soundFlyByOverride;
+			projectileData.hasPlayEffectImpactSound = this.HasPlayEffectImpactSound;
+			float damage = this.GetDamage();
+			ProjectileDamage projectileDamage = new ProjectileDamage(damage, projectileData.damageType);
+			projectileRay.damageComps.Add(projectileDamage);
+			if (UnityEngine.Random.Range(0f, 1f) < this.GetCritChance())
+			{
+				projectileDamage = new ProjectileDamage(damage, DamageTypes.Critical);
+				projectileRay.damageComps.Add(projectileDamage);
+			}
+			if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileApplyFire) >= 1f)
+			{
+				projectileDamage = new ProjectileDamage(10f, DamageTypes.Fire);
+				projectileRay.damageComps.Add(projectileDamage);
+			}
+			if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileApplyFrost) >= 1f)
+			{
+				projectileDamage = new ProjectileDamage(1f, DamageTypes.Frost);
+				projectileRay.damageComps.Add(projectileDamage);
+			}
+			if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileDark) > 0f)
+			{
+				float num6 = base.ItemStats.GetAttribute(ItemAttributes.ProjectileDark);
+				float attribute = base.ItemStats.GetAttribute(ItemAttributes.ProjectileChaosStrike);
+				if (attribute > 0f)
+				{
+					float num7 = UnityEngine.Random.Range(0f, attribute);
+					float num8 = num6 * num7;
+					num6 += num8;
+				}
+				projectileDamage = new ProjectileDamage(num6, DamageTypes.Dark);
+				projectileRay.damageComps.Add(projectileDamage);
+			}
+			projectileRay.bounceHits = (int)base.ItemStats.GetAttribute(ItemAttributes.ProjectileBounce);
+			projectileRay.bounciness = base.ItemStats.GetAttribute(ItemAttributes.ProjectileBounciness);
+			int num9 = (int)base.ItemStats.GetAttribute(ItemAttributes.ProjectilePenetration);
+			if (num9 > 0)
+			{
+				projectileRay.penetrationBehavior = PenetrationBehavior.Constant;
+				projectileRay.penetrationsLeft = num9;
+				projectileRay.penetrationDamageMultiplier = 1f + base.ItemStats.GetAttribute(ItemAttributes.ProjectilePenetrationDamageMultiplier);
+			}
+			else
+			{
+				projectileRay.penetrationBehavior = PenetrationBehavior.None;
+				projectileRay.penetrationsLeft = 0;
+				projectileRay.penetrationDamageMultiplier = 1f;
+			}
+			float value4;
+			if (base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileLifeTime, out value4))
+			{
+				projectileRay.lifeTime = Mathf.Clamp(value4, 0.1f, 240f);
+			}
+			float behaviourTimeout;
+			if (base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileBehaviourTimeout, out behaviourTimeout))
+			{
+				projectileRay.behaviourTimeout = behaviourTimeout;
+			}
+			float barrelLengthOffset = Vector3.Distance(this.BarrelTransform.position, this.owner.transform.position);
+			projectileRay.barrelLengthOffset = barrelLengthOffset;
+			this.effectOnProjectile = projectileRay.effect;
+			ProjectileCustomVisuals projectileCustomVisuals = null;
+			bool flag = base.ItemStats.GetAttribute(ItemAttributes.ProjectileMoveAsLight) > 0f;
+			if (flag)
+			{
+				if (projectileRay.innerWidth <= 0f)
+				{
+					projectileRay.innerWidth = 0.375f;
+				}
+				if (projectileRay.outerWidth <= 0f)
+				{
+					projectileRay.outerWidth = 0.75f;
+				}
+				if (projectileRay.ScaleFactor > 1f)
+				{
+					projectileRay.innerWidth *= projectileRay.ScaleFactor;
+					projectileRay.outerWidth *= projectileRay.ScaleFactor;
+				}
+				if (!projectileRay.hasCustomColors)
+				{
+					projectileRay.color = new float3(0.686f, 0.298f, 0.29f);
+					projectileRay.coreColor = new float3(0.812f, 0.58f, 0.573f);
+				}
+				else if (math.all(projectileRay.color == projectileRay.coreColor))
+				{
+					projectileRay.coreColor = math.lerp(projectileRay.color, new float3(1f, 1f, 1f), 0.4f);
+				}
+				StaticInstance<RailgunSystem>.Instance.FireRailgun(projectileRay, projectileData);
+			}
+			else
+			{
+				if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileVisualArrow) > 0f)
+				{
+					projectileCustomVisuals = ItemAttributes.ProjectileVisualArrow.GetAsset().customVisualsPrefab;
+					if (projectileRay.effect != ProjectileEffect.None)
+					{
+						projectileRay.hasCustomTrail = true;
+						projectileRay.drawDefaultBullet = true;
+					}
+					else
+					{
+						projectileRay.drawDefaultBullet = false;
+					}
+				}
+				else if (base.ItemStats.GetAttribute(ItemAttributes.ProjectileVisualCorruptedSludge) > 0f)
+				{
+					projectileCustomVisuals = ItemAttributes.ProjectileVisualCorruptedSludge.GetAsset().customVisualsPrefab;
+					projectileRay.drawDefaultBullet = false;
+				}
+				else if (this.Caliber == CaliberTypes.Laser)
+				{
+					projectileRay.drawDefaultBullet = false;
+					projectileRay.drawLaserBeam = true;
+					if (projectileRay.innerWidth <= 0f)
+					{
+						projectileRay.innerWidth = 0.375f;
+					}
+					if (projectileRay.outerWidth <= 0f)
+					{
+						projectileRay.outerWidth = 0.75f;
+					}
+					if (!projectileRay.hasCustomColors)
+					{
+						projectileRay.color = new float3(0.686f, 0.298f, 0.29f);
+						projectileRay.coreColor = new float3(0.812f, 0.58f, 0.573f);
+					}
+					else if (math.all(projectileRay.color == projectileRay.coreColor))
+					{
+						projectileRay.coreColor = math.lerp(projectileRay.color, new float3(1f, 1f, 1f), 0.4f);
+					}
+				}
+				StaticInstance<ProjectileSystemNEW>.Instance.StartProjectile(projectileRay, projectileData, projectileCustomVisuals);
+			}
+			this.lastFiredProjectile = new FullProjectileDescription
+			{
+				ray = projectileRay,
+				data = projectileData,
+				visuals = projectileCustomVisuals,
+				isRaygun = flag
+			};
+		}
+
+		// Token: 0x0600130D RID: 4877 RVA: 0x0006BD0C File Offset: 0x00069F0C
+		private Npc GetClosestUnitInViewport(Camera camera, float viewportMargin = 0.2f, float maxDistance = 25f)
+		{
+			Npc result = null;
+			float num = maxDistance;
+			foreach (Npc npc in StaticInstance<GameManager>.Instance.aliveNpcs)
+			{
+				if (!(npc == null) && !(npc.transform == null) && !npc.IsProtectedNpc && !npc.IsPlayerFaction)
+				{
+					Vector3 vector = camera.WorldToViewportPoint(npc.transform.position + Vector3.up);
+					if (vector.z <= maxDistance && (vector.z > 0f && vector.x > viewportMargin && vector.x < 1f - viewportMargin && vector.y > viewportMargin && vector.y < 1f - viewportMargin))
+					{
+						float num2 = Vector2.Distance(new Vector2(vector.x, vector.y), new Vector2(0.5f, 0.5f));
+						if (num2 < num)
+						{
+							num = num2;
+							result = npc;
+						}
+					}
+				}
+			}
+			return result;
+		}
+
+		// Token: 0x0600130E RID: 4878 RVA: 0x0006BE3C File Offset: 0x0006A03C
+		public override void SetOwner(Unit _owner)
+		{
+			base.SetOwner(_owner);
+			if (this.owner)
+			{
+				this.owner.SetLastUsedWeapon(this);
+			}
+		}
+
+		// Token: 0x0600130F RID: 4879 RVA: 0x0006BE5E File Offset: 0x0006A05E
+		public void SetActiveEffects(ref Projectile projectile)
+		{
+			projectile.ResetEffects();
+			projectile.SetModifiersOnHit(this.CalculateProjectileModifiers(), true);
+			if (base.ItemStats != null)
+			{
+				projectile.ActivateDamageComponentsAndEffects(this.CalculatedDamageComponents(), true);
+				projectile.ActivateEffects(base.ItemStats);
+			}
+		}
+
+		// Token: 0x06001310 RID: 4880 RVA: 0x0006BE98 File Offset: 0x0006A098
+		private void HandleGameStateChanged(GameState gameState)
+		{
+			if (gameState == GameState.Inventory || gameState == GameState.Paused)
+			{
+				this.SoundInspectPause();
+				return;
+			}
+			this.SoundInspectUnpause();
+		}
+
+		// Token: 0x06001311 RID: 4881 RVA: 0x0006BEB0 File Offset: 0x0006A0B0
+		private void OnEnable()
+		{
+			if (StaticInstance<GameManager>.Instance != null)
+			{
+				StaticInstance<GameManager>.Instance.OnGameStateChanged += this.HandleGameStateChanged;
+			}
+			if (base.Animator == null)
+			{
+				return;
+			}
+			this.onFire = (Weapon.OnFire)Delegate.Combine(this.onFire, new Weapon.OnFire(this.UpdateMagazine));
+			if (this.isReloading)
+			{
+				base.Animator.Play(this.savedStateInfo.fullPathHash, 0, this.animationSavedNormalizedTime);
+				if (this.ReloadDoneChecker != null)
+				{
+					base.StopCoroutine(this.ReloadDoneChecker);
+					this.ReloadDoneChecker = null;
+				}
+				this.ReloadDoneChecker = base.StartCoroutine(this.MakeSureReloadDone(this.remainingReloadTime));
+			}
+		}
+
+		// Token: 0x06001312 RID: 4882 RVA: 0x0006BF69 File Offset: 0x0006A169
+		private IEnumerator MakeSureReloadDone(float timer)
+		{
+			yield return new WaitForSeconds(timer);
+			this.ReloadFinished();
+			yield break;
+		}
+
+		// Token: 0x06001313 RID: 4883 RVA: 0x0006BF80 File Offset: 0x0006A180
+		private void OnDisable()
+		{
+			if (StaticInstance<GameManager>.Instance != null)
+			{
+				StaticInstance<GameManager>.Instance.OnGameStateChanged -= this.HandleGameStateChanged;
+			}
+			if (base.Animator == null)
+			{
+				return;
+			}
+			this.onFire = (Weapon.OnFire)Delegate.Remove(this.onFire, new Weapon.OnFire(this.UpdateMagazine));
+			if (this.isReloading)
+			{
+				if (this.timeSpentReloading > 0.5f)
+				{
+					if (this.ReloadDoneChecker != null)
+					{
+						base.StopCoroutine(this.ReloadDoneChecker);
+						this.ReloadDoneChecker = null;
+					}
+					this.savedStateInfo = base.Animator.GetCurrentAnimatorStateInfo(0);
+					float length = this.savedStateInfo.length;
+					float normalizedTime = this.savedStateInfo.normalizedTime;
+					if (length > 0f && !float.IsNaN(normalizedTime) && !float.IsInfinity(normalizedTime))
+					{
+						this.animationSavedNormalizedTime = normalizedTime;
+						this.remainingReloadTime = length - normalizedTime * length;
+					}
+					this.remainingReloadTime = Mathf.Max(this.remainingReloadTime, 0f);
+					return;
+				}
+				this.isReloading = false;
+			}
+		}
+
+		// Token: 0x06001314 RID: 4884 RVA: 0x0006C08C File Offset: 0x0006A28C
+		public void Initialize()
+		{
+			if (this.owner == null)
+			{
+				this.SetOwner(base.GetComponentInParent<Unit>());
+			}
+			this.SetupStats();
+			if (!this.bOwnerIsNpc)
+			{
+				GameObject playerObject = StaticInstance<GameManager>.Instance.PlayerObject;
+				if (playerObject != null)
+				{
+					this.cameraController = playerObject.GetComponentInChildren<ExtendedCameraController>();
+					this.equipmentManager = base.GetComponentInParent<EquipmentManager>();
+				}
+			}
+			if (base.Animator)
+			{
+				base.Animator.keepAnimatorStateOnDisable = true;
+				base.Animator.logWarnings = false;
+			}
+			this.SyncAnimationStates();
+			if (this.bOwnerIsNpc)
+			{
+				Npc npc = this.owner as Npc;
+				if (npc != null && npc.barrelObject != null)
+				{
+					this.barrelTransform = npc.barrelObject.transform;
+				}
+			}
+			Weapon.PostInitialization postInitialization = this.postInitialization;
+			if (postInitialization == null)
+			{
+				return;
+			}
+			postInitialization();
+		}
+
+		// Token: 0x06001315 RID: 4885 RVA: 0x0006C164 File Offset: 0x0006A364
+		public void ReportMeleeDone()
+		{
+			this.equipmentManager.OnMeleeDone();
+			this.SetAlternativeState(0);
+			this.currentParries = 0;
+			base.Animator.SetBool("Charge", false);
+			base.Animator.SetBool("Sprinting", false);
+			base.Animator.SetBool("AlternativePressed", false);
+			base.Animator.ResetTrigger("Parry");
+		}
+
+		// Token: 0x06001316 RID: 4886 RVA: 0x0006C1D0 File Offset: 0x0006A3D0
+		public void PlayAimClip(bool goToAim)
+		{
+			if (goToAim)
+			{
+				if (this.soundEventHandlingAimIn != null)
+				{
+					this.PlaySoundEvent2DIfPlayer(this.soundEventHandlingAimIn);
+					return;
+				}
+				this.equipmentManager.PlayFidgetSound(this.aimClip, 1f);
+				return;
+			}
+			else
+			{
+				if (this.soundEventHandlingAimIn != null)
+				{
+					this.PlaySoundEvent2DIfPlayer(this.soundEventHandlingAimOut);
+					return;
+				}
+				this.equipmentManager.PlayFidgetSound(this.unAimClip, 1f);
+				return;
+			}
+		}
+
+		// Token: 0x06001317 RID: 4887 RVA: 0x0006C244 File Offset: 0x0006A444
+		private List<ItemDefinition> GetCompatibleAttachments()
+		{
+			WeaponAttachmentVisual[] componentsInChildren = base.GetComponentsInChildren<WeaponAttachmentVisual>(true);
+			List<ItemDefinition> list = new List<ItemDefinition>();
+			for (int i = 0; i < componentsInChildren.Length; i++)
+			{
+				if (componentsInChildren[i].laserSightSwapper != null)
+				{
+					for (int j = 0; j < componentsInChildren[i].laserSightSwapper.entries.Count; j++)
+					{
+						ItemDefinition asset = componentsInChildren[i].laserSightSwapper.entries[j].itemId.GetAsset();
+						if (asset != null)
+						{
+							list.Add(asset);
+						}
+					}
+				}
+				else if (componentsInChildren[i].attachmentDefinition != null)
+				{
+					list.Add(componentsInChildren[i].attachmentDefinition);
+				}
+			}
+			if (!this.isThrowable)
+			{
+				list.Add(ItemIds.Attachment_Insurance.GetAsset());
+			}
+			return list;
+		}
+
+		// Token: 0x06001318 RID: 4888 RVA: 0x0006C30C File Offset: 0x0006A50C
+		public void SyncAnimationStates()
+		{
+			if (base.Animator == null)
+			{
+				return;
+			}
+			if (this.iAmmoCurrent == 0)
+			{
+				base.Animator.SetBool("GunEmpty", true);
+			}
+			else
+			{
+				base.Animator.SetBool("GunEmpty", false);
+			}
+			if (this.iAmmoCurrent == 1)
+			{
+				base.Animator.SetBool("LastBullet", true);
+				return;
+			}
+			base.Animator.SetBool("LastBullet", false);
+		}
+
+		// Token: 0x06001319 RID: 4889 RVA: 0x0006C380 File Offset: 0x0006A580
+		public override void OnSelected()
+		{
+			base.OnSelected();
+			this.UpdateAmmoCurrentInAnimator();
+			this.SetupRenderers();
+			this.SyncAnimationStates();
+			this.SyncCaliberModels();
+			this.SyncDurabilityEffects(false);
+			this.bWasTriggerActive = false;
+			this.bIsOnCooldown = false;
+			base.Animator.ResetTrigger("CancelReload");
+			this.reloadCanceled = false;
+			this.canReload = true;
+			this.PlayEquipSound();
+			if (this.firstTimeEquip)
+			{
+				base.Animator.SetBool("NeedsCocking", true);
+			}
+			this.equipmentManager.UnsightWeapon();
+		}
+
+		// Token: 0x0600131A RID: 4890 RVA: 0x0006C408 File Offset: 0x0006A608
+		public void PlayEquipSound()
+		{
+			base.StartCoroutine(this.PlayEquipSoundBuffertRoutine());
+		}
+
+		// Token: 0x0600131B RID: 4891 RVA: 0x0006C417 File Offset: 0x0006A617
+		private IEnumerator PlayEquipSoundBuffertRoutine()
+		{
+			yield return new WaitForSeconds(0.1f);
+			if (base.IsSelected && !this.bOwnerIsNpc)
+			{
+				if (this.soundEventHandlingEquip != null)
+				{
+					this.PlaySoundEvent2DIfPlayer(this.soundEventHandlingEquip);
+				}
+				else
+				{
+					this.equipmentManager.PlayFidgetSound(this.equipClip, 1f);
+				}
+			}
+			yield break;
+		}
+
+		// Token: 0x0600131C RID: 4892 RVA: 0x0006C426 File Offset: 0x0006A626
+		public override void OnUnselected()
+		{
+			base.OnUnselected();
+			if (!this.firesByTrigger)
+			{
+				this.ReclaimAmmoToStorage();
+			}
+			this.SoundInspectStop();
+		}
+
+		// Token: 0x0600131D RID: 4893 RVA: 0x0006C442 File Offset: 0x0006A642
+		public void AnimationPreventShooting(int state = 1)
+		{
+			if (this.owner)
+			{
+				this.owner.PreventShootingFromAnimation(state);
+			}
+			if (state == 0 && this.owner.isPlayer)
+			{
+				base.StartCoroutine(this.TrySightWeaponAfterReload());
+			}
+		}
+
+		// Token: 0x0600131E RID: 4894 RVA: 0x0006C47A File Offset: 0x0006A67A
+		public void SetAimDownSights(int state = 1)
+		{
+			if (state == 1)
+			{
+				this.bIsAimingDownSight = true;
+				return;
+			}
+			this.bIsAimingDownSight = false;
+		}
+
+		// Token: 0x0600131F RID: 4895 RVA: 0x0006C490 File Offset: 0x0006A690
+		public void AimAt(Vector3 position)
+		{
+			if (this.BarrelTransform == null)
+			{
+				if (GlobalSettings.VerboseLoggingWeapons)
+				{
+					Debug.LogError(string.Format("Weapon {0} on {1} haven't got a BarrelTransform.", this.weaponDefinition, this.owner));
+				}
+				return;
+			}
+			if (this.volleyProjectiles)
+			{
+				float num = 1f;
+				if (this.ProjectileType != ProjectileTypes.None)
+				{
+					float mass = this.ProjectileType.GetAsset().mass;
+					if (mass > 0f)
+					{
+						num *= mass;
+					}
+				}
+				float num2;
+				if (base.ItemStats != null && base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileMass, out num2) && num2 > 0f)
+				{
+					num *= num2;
+				}
+				float num3 = this.bulletSpeed / num;
+				if (this.bOwnerIsNpc)
+				{
+					num3 *= 0.25f;
+				}
+				Vector3 forward = Helpers.CalculateThrowDirection(this.BarrelTransform.position, position, ProjectileRay.GRAVITY, num3);
+				this.BarrelTransform.forward = forward;
+				return;
+			}
+			this.BarrelTransform.LookAt(position);
+		}
+
+		// Token: 0x06001320 RID: 4896 RVA: 0x0006C57C File Offset: 0x0006A77C
+		public void AttemptShoot()
+		{
+			if (!this.firesByTrigger)
+			{
+				return;
+			}
+			if (this.bOwnerIsNpc && this.owner.IsIncapacitated)
+			{
+				base.SetTrigger(false);
+				return;
+			}
+			if (!this.bOwnerIsNpc && base.inventoryItem.IsBroken)
+			{
+				base.SetTrigger(false);
+				this.SoundClickPlay();
+				return;
+			}
+			if (this.isReloading && this.reloadCanBeCancelled)
+			{
+				this.reloadCanceled = true;
+				this.isReloading = false;
+				base.Animator.SetTrigger("CancelReload");
+				base.Animator.ResetTrigger("Reload");
+				return;
+			}
+			if (this.owner.ShootingPrevented)
+			{
+				return;
+			}
+			if (!this.weaponDefinition.IsMelee && this.iAmmoCurrent <= 0)
+			{
+				if (!this.hasClicked)
+				{
+					this.SoundClickPlay();
+					this.hasClicked = true;
+					base.SetTrigger(false);
+				}
+				else if (SettingsManager.autoReloadSetting.currentValue == 1f)
+				{
+					this.Reload();
+				}
+				else
+				{
+					this.SoundClickPlay();
+					base.SetTrigger(false);
+				}
+				this.rpmCooldownRoutine = base.StartCoroutine(this.cooldownRoutine());
+				return;
+			}
+			if (this.playerController != null && this.playerController.enabled && this.playerController.isSprinting)
+			{
+				return;
+			}
+			this.Shoot();
+		}
+
+		// Token: 0x06001321 RID: 4897 RVA: 0x0006C6BB File Offset: 0x0006A8BB
+		public float NormalizedAmmoLeft()
+		{
+			return (float)this.iAmmoCurrent / (float)this.iAmmoMax;
+		}
+
+		// Token: 0x06001322 RID: 4898 RVA: 0x0006C6CC File Offset: 0x0006A8CC
+		protected void UpdateAnimatorSettings()
+		{
+			switch (this.CurrentAnimationType)
+			{
+			case WeaponState.Idle:
+				this.SetAnimatorSpeed(1f);
+				return;
+			case WeaponState.Reload:
+				this.SetAnimatorSpeed(this.reloadSpeed);
+				return;
+			case WeaponState.Fire:
+				this.SetAnimatorSpeed(this.animationSpeedModifier * this.holdRpmMultiplier * this.ammoInMagRpmMultiplier);
+				return;
+			default:
+				this.SetAnimatorSpeed(this.animationSpeedModifier * this.holdRpmMultiplier * this.ammoInMagRpmMultiplier);
+				return;
+			}
+		}
+
+		// Token: 0x06001323 RID: 4899 RVA: 0x0006C744 File Offset: 0x0006A944
+		private void UpdateBarrelAndAim()
+		{
+			if (this.owner == null)
+			{
+				return;
+			}
+			if (this.BarrelTransform != null)
+			{
+				this.aimPosition = this.BarrelTransform.position + this.BarrelTransform.forward * 0.1f;
+				if (this.owner.isPlayer)
+				{
+					float num;
+					this.aimPosition = WeaponRendererFeature.FOVAdjustedMuzzlePosition_DirectionalCorrect(base.owningPlayer, this.aimPosition, out num);
+				}
+			}
+			else if (!this.owner.isNpc)
+			{
+				Debug.LogWarning(string.Format("Weapon '{0}' is missing a barrelTransform.", base.gameObject), base.gameObject);
+			}
+			if (this.owner.isPlayer)
+			{
+				Camera playerCamera = base.owningPlayer.playerCamera;
+				if (playerCamera != null)
+				{
+					this.aimRotation = playerCamera.transform.forward;
+					Vector3 a = Vector3.zero;
+					if (this.AimFromTransform != null && this.bIsAimingDownSight)
+					{
+						a = this.AimFromTransform.position;
+					}
+					else
+					{
+						a = playerCamera.ScreenToWorldPoint(Vector3.zero);
+					}
+					Vector3 a2 = a - (playerCamera.transform.position - this.aimRotation * 5f);
+					this.aimAtPosition = a + a2 * this.aimDistance;
+					this.AimAtGeometryPosition = this.aimAtPosition;
+				}
+			}
+		}
+
+		// Token: 0x06001324 RID: 4900 RVA: 0x0006C8A4 File Offset: 0x0006AAA4
+		protected virtual void Update()
+		{
+			if (this.isReloading)
+			{
+				this.timeSpentReloading += Time.deltaTime;
+			}
+			if (this.updateAnimatorSettingsTimer <= 0f)
+			{
+				this.UpdateAnimatorSettings();
+				this.updateAnimatorSettingsTimer = this.updateAnimatorSettingsTimerMax;
+			}
+			else
+			{
+				this.updateAnimatorSettingsTimer -= Time.deltaTime;
+			}
+			this.DoAimValueUpdate();
+		}
+
+		// Token: 0x06001325 RID: 4901 RVA: 0x0006C904 File Offset: 0x0006AB04
+		public virtual void HandleShootingUpdate()
+		{
+			if (!this.bIsTriggerActive)
+			{
+				if (this.timeShootingRecoil > 0f)
+				{
+					this.timeShootingRecoil -= Time.deltaTime * 2f;
+				}
+				this.triggerIdleTimer += Time.deltaTime;
+				if (this.triggerIdleTimer > this.weaponDefinition.timeToCooldownSpread)
+				{
+					this.shootEventsSinceIdle = 0;
+				}
+			}
+			if (this.bIsTriggerActive)
+			{
+				if (this.timeShootingRecoil < this.timeShootingRecoilMax)
+				{
+					this.timeShootingRecoil += Time.deltaTime;
+				}
+				if (!this.bIsOnCooldown)
+				{
+					if (this.IsFullAutoEnabled)
+					{
+						this.AttemptShoot();
+					}
+					else if (!this.bWasTriggerActive)
+					{
+						this.AttemptShoot();
+					}
+					this.bWasTriggerActive = true;
+					return;
+				}
+			}
+			else
+			{
+				this.bWasTriggerActive = false;
+			}
+		}
+
+		// Token: 0x06001326 RID: 4902 RVA: 0x0006C9C7 File Offset: 0x0006ABC7
+		private void LateUpdate()
+		{
+			this.HandleShootingUpdate();
+		}
+
+		// Token: 0x06001327 RID: 4903 RVA: 0x0006C9CF File Offset: 0x0006ABCF
+		public virtual void SightWeapon(bool toADS)
+		{
+			if (!base.isActiveAndEnabled)
+			{
+				return;
+			}
+			if (this.currentADSLerpJob != null)
+			{
+				base.StopCoroutine(this.currentADSLerpJob);
+			}
+			this.currentADSLerpJob = base.StartCoroutine(this.LerpADSRoutine(toADS));
+		}
+
+		// Token: 0x06001328 RID: 4904 RVA: 0x0006CA01 File Offset: 0x0006AC01
+		private IEnumerator LerpADSRoutine(bool toADS)
+		{
+			float time = 0f;
+			Vector3 startPosition = base.transform.localPosition;
+			Quaternion startRotation = base.transform.localRotation;
+			Vector3 actualWeaponOffsetADS = (this.overrideWeaponOffsetADS != Vector3.zero) ? this.overrideWeaponOffsetADS : this.weaponOffsetADS;
+			Vector3 actualWeaponOffsetADSrotation = (this.overrideWeaponOffsetADSRotation != Vector3.zero) ? this.overrideWeaponOffsetADSRotation : this.weaponOffsetADSRotation;
+			while (time < this.aimRotationLerpTime)
+			{
+				if (toADS)
+				{
+					base.transform.localPosition = Vector3.Lerp(startPosition, actualWeaponOffsetADS, time / this.aimRotationLerpTime);
+					base.transform.localRotation = Quaternion.Lerp(startRotation, Quaternion.Euler(actualWeaponOffsetADSrotation), time / this.aimRotationLerpTime);
+					time += Time.deltaTime;
+					yield return null;
+				}
+				else
+				{
+					base.transform.localPosition = Vector3.Lerp(startPosition, this.weaponOffset, time / this.aimRotationLerpTime);
+					base.transform.localRotation = Quaternion.Lerp(startRotation, Quaternion.Euler(this.weaponOffsetRotation), time / this.aimRotationLerpTime);
+					time += Time.deltaTime;
+					yield return null;
+				}
+			}
+			if (toADS)
+			{
+				base.transform.localPosition = actualWeaponOffsetADS;
+				base.transform.localRotation = Quaternion.Euler(actualWeaponOffsetADSrotation);
+			}
+			else
+			{
+				base.transform.localPosition = this.weaponOffset;
+				base.transform.localRotation = Quaternion.Euler(this.weaponOffsetRotation);
+			}
+			yield break;
+		}
+
+		// Token: 0x06001329 RID: 4905 RVA: 0x0006CA17 File Offset: 0x0006AC17
+		public IEnumerator BeforeReloadCooldown()
+		{
+			this.canReload = false;
+			yield return new WaitForSeconds(this.cooldownBeforeReload);
+			this.canReload = true;
+			if (this.automaticReload && this.iAmmoCurrent == 0)
+			{
+				this.Reload();
+			}
+			else if (this.bufferedReloadTime >= 0f && Time.time - this.bufferedReloadTime < this.reloadBufferWindow)
+			{
+				this.bufferedReloadTime = -1f;
+				this.Reload();
+			}
+			yield break;
+		}
+
+		// Token: 0x0600132A RID: 4906 RVA: 0x0006CA28 File Offset: 0x0006AC28
+		public override void Reload()
+		{
+			if (this.isReloading)
+			{
+				return;
+			}
+			if (!this.reloadWithButton)
+			{
+				return;
+			}
+			this.SyncCaliberModels();
+			if (this.owner.isPlayer)
+			{
+				if (base.inventoryItem.IsBroken)
+				{
+					return;
+				}
+				float num;
+				if (StaticInstance<GameManager>.Instance.PlayerUnit.Stats.TryGetAttribute(EntityAttributes.Status_OneInTheChamber, out num) && this.iAmmoCurrent >= 1)
+				{
+					return;
+				}
+				if (this.iAmmoCurrent == this.iAmmoMax)
+				{
+					return;
+				}
+				if (base.GetStoredAmmo() == 0)
+				{
+					return;
+				}
+				if (!this.canReload && !this.bIsAimingDownSight)
+				{
+					this.bufferedReloadTime = Time.time;
+					base.StartCoroutine(this.BeforeReloadCooldown());
+					return;
+				}
+			}
+			base.StartCoroutine(this.BeforeReloadCooldown());
+			if (base.Animator)
+			{
+				base.Animator.SetInteger("AmmoPool", base.GetStoredAmmo());
+				this.equipmentManager.UnsightWeapon();
+				base.Animator.SetTrigger("Reload");
+				base.Animator.ResetTrigger("Fire");
+				base.Animator.ResetTrigger("CancelReload");
+			}
+			else
+			{
+				base.StartCoroutine(this.ReloadRoutine());
+			}
+			if (this.reloadScreenShake.magnitude != 0f)
+			{
+				StaticInstance<EffectsManager>.Instance.ScreenShakeOnce(this.reloadScreenShake.magnitude, this.reloadScreenShake.roughness, this.reloadScreenShake.fadeInTime, this.reloadScreenShake.fadeOutTime);
+			}
+			this.SoundReloadPlay();
+			this.reloadCanceled = false;
+			this.isReloading = true;
+			this.timeSpentReloading = 0f;
+			this.bufferedReloadTime = -1f;
+			this.SetAnimatorSpeed(this.reloadSpeed);
+		}
+
+		// Token: 0x0600132B RID: 4907 RVA: 0x0006CBC5 File Offset: 0x0006ADC5
+		private void SetAnimatorSpeed(float speed)
+		{
+			if (base.Animator != null)
+			{
+				base.Animator.speed = Mathf.Clamp(speed, 0.01f, 10f);
+			}
+		}
+
+		// Token: 0x0600132C RID: 4908 RVA: 0x0006CBF0 File Offset: 0x0006ADF0
+		private IEnumerator ReloadRoutine()
+		{
+			yield return new WaitForSeconds(this.fReloadTime);
+			this.ReloadFinished();
+			yield break;
+		}
+
+		// Token: 0x0600132D RID: 4909 RVA: 0x0006CC00 File Offset: 0x0006AE00
+		private void ModifyStoredAmmo(int modification)
+		{
+			if (this.bOwnerIsNpc)
+			{
+				return;
+			}
+			if (modification < 0 && EndlessModeManager.Instance != null && EndlessModeManager.Instance.infiniteAmmoActive)
+			{
+				return;
+			}
+			if (base.inventoryItem.UsesResource != WorldResources.None)
+			{
+				this.owner.Stats.ModifyWorldResource(base.inventoryItem.UsesResource, modification, this);
+			}
+			this.UpdateAmmo();
+		}
+
+		// Token: 0x0600132E RID: 4910 RVA: 0x0006CC64 File Offset: 0x0006AE64
+		public IEnumerator cooldownRoutine()
+		{
+			this.bIsOnCooldown = true;
+			float num = this.bOwnerIsNpc ? (this.cooldown * 1f) : this.cooldown;
+			if (this.playerController != null)
+			{
+				this.playerController.nextAutoSprintTime = Time.time + 0.5f;
+			}
+			yield return new WaitForSeconds(num * this.holdRpmCdMultiplier * this.ammoInMagCdMultiplier);
+			this.bIsOnCooldown = false;
+			yield break;
+		}
+
+		// Token: 0x0600132F RID: 4911 RVA: 0x0006CC73 File Offset: 0x0006AE73
+		private void SoundClickPlay()
+		{
+			if (this.soundEventHandlingClick != null)
+			{
+				this.PlaySoundEvent2DIfPlayer(this.soundEventHandlingClick);
+			}
+		}
+
+		// Token: 0x06001330 RID: 4912 RVA: 0x0006CC8F File Offset: 0x0006AE8F
+		private void SoundReloadPlay()
+		{
+			if (this.soundEventHandlingReload != null)
+			{
+				this.PlaySoundEvent2DIfPlayer(this.soundEventHandlingReload);
+			}
+		}
+
+		// Token: 0x06001331 RID: 4913 RVA: 0x0006CCAC File Offset: 0x0006AEAC
+		public void OnBreakdown()
+		{
+			string translation = LocalizationManager.GetTranslation("Announcements/NeedsRepairing", true, 0, true, false, null, null, true);
+			if (translation != null)
+			{
+				string translation2 = LocalizationManager.GetTranslation("Items/" + this.weaponDefinition.name, true, 0, true, false, null, null, true);
+				string alertText = translation.Replace("ITEM_X", translation2);
+				StaticInstance<UIManager>.Instance.ShowSmallAlert(alertText, 3.5f);
+			}
+			if (!this.bOwnerIsNpc && this.soundEventDurabilityBroken != null)
+			{
+				this.PlaySoundEvent2DIfPlayer(this.soundEventDurabilityBroken);
+			}
+		}
+
+		// Token: 0x06001332 RID: 4914 RVA: 0x0006CD2F File Offset: 0x0006AF2F
+		public void ShootSound(int ammoAmountUsed)
+		{
+			this.SoundShot(ammoAmountUsed);
+		}
+
+		// Token: 0x06001333 RID: 4915 RVA: 0x0006CD38 File Offset: 0x0006AF38
+		private void SoundShot(int ammoAmountUsed)
+		{
+			if (this.bOwnerIsNpc && base.owningNpc.soundEventShotMutation != null)
+			{
+				this.PlayShootSoundEvent(base.owningNpc.soundEventShotMutation, false);
+			}
+			if (this.soundEventShotMutation != null)
+			{
+				this.PlayShootSoundEvent(this.soundEventShotMutation, false);
+			}
+			if (!this.bOwnerIsNpc && this.effectOnProjectile != ProjectileEffect.None)
+			{
+				ProjectileEffectDefinition asset = this.effectOnProjectile.GetAsset();
+				if (asset.soundEventShot != null)
+				{
+					this.PlayShootSoundEvent(asset.soundEventShot, true);
+				}
+			}
+			SoundEvent soundEvent = null;
+			if (!this.IsCaliberModded)
+			{
+				if (!this.soundShotAmmoUsedIntensity || this.IsSilenced)
+				{
+					if (!this.IsSilenced)
+					{
+						soundEvent = this.soundShot;
+					}
+					else
+					{
+						soundEvent = this.soundShotSilenced;
+					}
+				}
+				else if (this.weaponDefinition != null && this.weaponDefinition.iMaxAmmoPerShot != 0)
+				{
+					this.PlayShootSoundEventIntensity(this.soundShot, false, (float)ammoAmountUsed / (float)this.weaponDefinition.iMaxAmmoPerShot);
+				}
+				if (!this.bOwnerIsNpc)
+				{
+					this.PlayRunningOutOfAmmoSoundEvent(this.runningOutOfAmmoType, this.IsSilenced, null);
+				}
+			}
+			else
+			{
+				CaliberType asset2 = this.Caliber.GetAsset();
+				if (!this.IsSilenced)
+				{
+					soundEvent = asset2.soundShot;
+				}
+				else
+				{
+					soundEvent = asset2.soundShotSilenced;
+				}
+				if (!this.bOwnerIsNpc)
+				{
+					this.PlayRunningOutOfAmmoSoundEvent(this.runningOutOfAmmoType, this.IsSilenced, asset2.runningOutOfAmmoOverride);
+				}
+			}
+			if (soundEvent != null)
+			{
+				this.PlayShootSoundEvent(soundEvent, false);
+			}
+		}
+
+		// Token: 0x06001334 RID: 4916 RVA: 0x0006CEA2 File Offset: 0x0006B0A2
+		private void PlayShootSoundEvent(SoundEvent soundEvent, bool isEffectShootSound = false)
+		{
+			if (this.HasPlayEffectShootSound && !isEffectShootSound)
+			{
+				return;
+			}
+			if (this.bOwnerIsNpc)
+			{
+				soundEvent.Play(this.GetShotTransform());
+				return;
+			}
+			soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+			{
+				this.soundParameterIncrease2D
+			});
+		}
+
+		// Token: 0x06001335 RID: 4917 RVA: 0x0006CEE0 File Offset: 0x0006B0E0
+		private void PlayShootSoundEventIntensity(SoundEvent soundEvent, bool isEffectShootSound = false, float intensityValue = 1f)
+		{
+			if (this.HasPlayEffectShootSound && !isEffectShootSound)
+			{
+				return;
+			}
+			if (this.bOwnerIsNpc)
+			{
+				soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+				{
+					new SoundParameterIntensity(intensityValue, UpdateMode.Once)
+				});
+				return;
+			}
+			soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+			{
+				this.soundParameterIncrease2D,
+				new SoundParameterIntensity(intensityValue, UpdateMode.Once)
+			});
+		}
+
+		// Token: 0x06001336 RID: 4918 RVA: 0x0006CF44 File Offset: 0x0006B144
+		private void PlayRunningOutOfAmmoSoundEvent(AudioRunningOutOfAmmoType outOfAmmoType, bool isSilencer, AudioRunningOutOfAmmoType outOfAmmoTypeChisel)
+		{
+			if (!this.bOwnerIsNpc && this.runningOutOfAmmoPlay && outOfAmmoType != null)
+			{
+				int num = this.iAmmoCurrent + 1;
+				if (this.runningOutOfAmmoTwoMagazines)
+				{
+					num = Mathf.RoundToInt((float)num / 2f + 0.25f);
+				}
+				if (num <= this.runningOutOfAmmoNumberOfShots)
+				{
+					SoundEvent soundEvent;
+					if (num > 1)
+					{
+						if (outOfAmmoTypeChisel != null)
+						{
+							soundEvent = outOfAmmoTypeChisel.GetRunningOutOfAmmoFirstIndex(num);
+						}
+						else
+						{
+							soundEvent = outOfAmmoType.GetRunningOutOfAmmoFirstIndex(num);
+						}
+					}
+					else if (outOfAmmoTypeChisel != null)
+					{
+						soundEvent = outOfAmmoTypeChisel.runningOutOfAmmoLast;
+					}
+					else
+					{
+						soundEvent = outOfAmmoType.runningOutOfAmmoLast;
+					}
+					if (soundEvent != null)
+					{
+						if (isSilencer)
+						{
+							if (outOfAmmoTypeChisel != null)
+							{
+								soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+								{
+									this.soundParameterIncrease2D,
+									new SoundParameterVolumeDecibel(outOfAmmoTypeChisel.silencerVolumeReduce, UpdateMode.Once)
+								});
+								return;
+							}
+							soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+							{
+								this.soundParameterIncrease2D,
+								new SoundParameterVolumeDecibel(outOfAmmoType.silencerVolumeReduce, UpdateMode.Once)
+							});
+							return;
+						}
+						else
+						{
+							soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+							{
+								this.soundParameterIncrease2D
+							});
+						}
+					}
+				}
+			}
+		}
+
+		// Token: 0x06001337 RID: 4919 RVA: 0x0006D064 File Offset: 0x0006B264
+		public void PlaySoundEvent2DIfPlayer(SoundEvent soundEvent)
+		{
+			if (soundEvent != null)
+			{
+				if (this.bOwnerIsNpc)
+				{
+					soundEvent.Play(this.GetShotTransform());
+					return;
+				}
+				soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+				{
+					this.soundParameterIncrease2D
+				});
+			}
+		}
+
+		// Token: 0x06001338 RID: 4920 RVA: 0x0006D0A0 File Offset: 0x0006B2A0
+		public void PlaySoundEvent2DIfPlayerVolume(SoundEvent soundEvent, float volume)
+		{
+			if (soundEvent != null)
+			{
+				if (this.bOwnerIsNpc)
+				{
+					soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+					{
+						new SoundParameterVolumeRatio(volume, UpdateMode.Once)
+					});
+					return;
+				}
+				soundEvent.Play(this.GetShotTransform(), new SoundParameterInternals[]
+				{
+					new SoundParameterVolumeRatio(volume, UpdateMode.Once),
+					this.soundParameterIncrease2D
+				});
+			}
+		}
+
+		// Token: 0x06001339 RID: 4921 RVA: 0x0006D100 File Offset: 0x0006B300
+		public Transform GetShotTransform()
+		{
+			if (this.owner.isPlayer)
+			{
+				if (this.playerCameraTransform == null)
+				{
+					Player component = StaticInstance<GameManager>.Instance.PlayerScript.GetComponent<Player>();
+					this.playerCameraTransform = component.playerCamera.transform;
+				}
+				return this.playerCameraTransform;
+			}
+			return this.BarrelTransform;
+		}
+
+		// Token: 0x0600133A RID: 4922 RVA: 0x0006D158 File Offset: 0x0006B358
+		public DamageTypes GetDamageType()
+		{
+			if (base.owningNpc != null && base.owningNpc.damageTypeOverride != DamageTypes.None)
+			{
+				return base.owningNpc.damageTypeOverride;
+			}
+			if (this.weaponDefinition != null)
+			{
+				return this.weaponDefinition.damageType;
+			}
+			return DamageTypes.Normal;
+		}
+
+		// Token: 0x17000358 RID: 856
+		// (get) Token: 0x0600133B RID: 4923 RVA: 0x0006D1A7 File Offset: 0x0006B3A7
+		public float Damage
+		{
+			get
+			{
+				if (this.bOwnerIsNpc)
+				{
+					return base.ItemStats.GetAttribute(ItemAttributes.Damage);
+				}
+				return base.inventoryItem.stats.GetAttribute(ItemAttributes.Damage) * this.chargeAmount;
+			}
+		}
+
+		// Token: 0x17000359 RID: 857
+		// (get) Token: 0x0600133C RID: 4924 RVA: 0x0006D1D6 File Offset: 0x0006B3D6
+		public string SourceName
+		{
+			get
+			{
+				return this.weaponDefinition.ToString();
+			}
+		}
+
+		// Token: 0x1700035A RID: 858
+		// (get) Token: 0x0600133D RID: 4925 RVA: 0x0006D1E3 File Offset: 0x0006B3E3
+		public Unit SourceUnit
+		{
+			get
+			{
+				return this.owner;
+			}
+		}
+
+		// Token: 0x1700035B RID: 859
+		// (get) Token: 0x0600133E RID: 4926 RVA: 0x00015877 File Offset: 0x00013A77
+		public Weapon SourceWeapon
+		{
+			get
+			{
+				return this;
+			}
+		}
+
+		// Token: 0x1700035C RID: 860
+		// (get) Token: 0x0600133F RID: 4927 RVA: 0x0006D1EB File Offset: 0x0006B3EB
+		public bool CreatedByPlayer
+		{
+			get
+			{
+				return this.owner.isPlayer;
+			}
+		}
+
+		// Token: 0x1700035D RID: 861
+		// (get) Token: 0x06001340 RID: 4928 RVA: 0x00013875 File Offset: 0x00011A75
+		public Transform Transform
+		{
+			get
+			{
+				return base.transform;
+			}
+		}
+
+		// Token: 0x06001341 RID: 4929 RVA: 0x0006D1F8 File Offset: 0x0006B3F8
+		public float GetDamage()
+		{
+			int num = 0;
+			float num2 = this.Damage;
+			if (this.owner.isPlayer)
+			{
+				float damage = this.Damage;
+				EntityAttributes damageModAttribute = this.weaponDefinition.weaponType.GetDamageModAttribute();
+				if (damageModAttribute != EntityAttributes.None)
+				{
+					num += (int)(damage * Mathf.Clamp(base.inventoryItem.Owner.Stats.GetAttribute(damageModAttribute) - 1f, 0f, 10f));
+				}
+				if (this.IsFullAutoEnabled)
+				{
+					float attribute = this.owner.Stats.GetAttribute(EntityAttributes.ExtraDamage_Automatic);
+					num += (int)(damage * Mathf.Clamp(attribute - 1f, 0f, 10f));
+				}
+				float num3;
+				if (this.owner.Stats.TryGetAttribute(EntityAttributes.Stat_JumpShotDamage, out num3) && !StaticInstance<GameManager>.Instance.PlayerScript.movement.IsGrounded())
+				{
+					num += (int)(damage * Mathf.Clamp(num3 - 1f, 0f, 10f));
+				}
+				float value;
+				float value2;
+				if (this.activeEjectionPort == WeaponSide.Right && base.ItemStats.TryGetAttribute(ItemAttributes.ExtraDamage_RightGun, out value))
+				{
+					num += (int)(damage * Mathf.Clamp(value, 0f, 10f));
+				}
+				else if (this.activeEjectionPort == WeaponSide.Left && base.ItemStats.TryGetAttribute(ItemAttributes.ExtraDamage_LeftGun, out value2))
+				{
+					num += (int)(damage * Mathf.Clamp(value2, 0f, 10f));
+				}
+				num2 = this.Damage + (float)num;
+			}
+			float num4;
+			if (this.owner.Stats.TryGetAttribute(EntityAttributes.Stat_GlobalDamageMultiplier, out num4))
+			{
+				num2 *= 1f + num4;
+			}
+			return Mathf.Clamp(num2, 0f, 999999f);
+		}
+
+		// Token: 0x06001342 RID: 4930 RVA: 0x0006D398 File Offset: 0x0006B598
+		public void PlayMiscClip(int clipID)
+		{
+			if (this.bOwnerIsNpc || this.equipmentManager == null)
+			{
+				return;
+			}
+			SoundEvent soundEvent = null;
+			if (this.soundHandlingReloads.Length != 0)
+			{
+				if (this.soundHandlingReloads.Length > clipID)
+				{
+					soundEvent = this.soundHandlingReloads[clipID];
+				}
+			}
+			else
+			{
+				switch (clipID)
+				{
+				case 0:
+					soundEvent = this.soundEventHandlingMagIn;
+					break;
+				case 1:
+					soundEvent = this.soundEventHandlingMagOut;
+					break;
+				case 2:
+					soundEvent = this.soundEventHandlingSlideBack;
+					break;
+				case 3:
+					soundEvent = this.soundEventHandlingSlideForward;
+					break;
+				case 4:
+					soundEvent = this.soundEventHandlingExtraA;
+					break;
+				case 5:
+					soundEvent = this.soundEventHandlingExtraB;
+					break;
+				}
+			}
+			if (soundEvent != null)
+			{
+				this.PlaySoundEvent2DIfPlayer(soundEvent);
+			}
+		}
+
+		// Token: 0x06001343 RID: 4931 RVA: 0x0006D444 File Offset: 0x0006B644
+		public void ReclaimAmmoToStorage()
+		{
+			int iAmmoCurrent = this.iAmmoCurrent;
+			this.iAmmoCurrent = 0;
+			this.ModifyStoredAmmo(iAmmoCurrent);
+			this.UpdateAmmo();
+		}
+
+		// Token: 0x06001344 RID: 4932 RVA: 0x0006D46C File Offset: 0x0006B66C
+		public void ReloadFinished()
+		{
+			this.isReloading = false;
+			this.hasClicked = false;
+			this.bIsOnCooldown = false;
+			if (this.rpmCooldownRoutine != null)
+			{
+				base.StopCoroutine(this.rpmCooldownRoutine);
+			}
+			if (this.owner.isPlayer)
+			{
+				this.ammoInStorage = base.GetStoredAmmo();
+				int num = this.iAmmoMax - this.iAmmoCurrent;
+				bool flag = false;
+				int num2 = this.iAmmoMax - this.bulletsPerReload;
+				if (this.iAmmoCurrent + this.bulletsPerReload > num2)
+				{
+					flag = true;
+				}
+				int num3 = (!flag && this.bulletsPerReload < num) ? this.bulletsPerReload : num;
+				if (this.reloadFullIfEmpty && this.iAmmoCurrent == 0)
+				{
+					num3 = this.iAmmoMax;
+				}
+				float num4;
+				if (StaticInstance<GameManager>.Instance.PlayerUnit.Stats.TryGetAttribute(EntityAttributes.Status_OneInTheChamber, out num4))
+				{
+					num3 = 1;
+				}
+				int num5 = (this.ammoInStorage < num3) ? this.ammoInStorage : num3;
+				this.ModifyStoredAmmo(-num5);
+				this.iAmmoCurrent += num5;
+				this.ammoInStorage = base.GetStoredAmmo();
+			}
+			else
+			{
+				this.ammoInStorage = 99999;
+				if (this.iAmmoMax > 0 && this.iAmmoCurrent <= 0)
+				{
+					this.iAmmoCurrent = this.iAmmoMax;
+				}
+			}
+			this.UpdateAmmo();
+			if (base.Animator)
+			{
+				base.Animator.SetInteger("BulletsLeft", this.iAmmoCurrent);
+				base.Animator.SetBool("LastBullet", this.iAmmoCurrent == 1);
+				base.Animator.SetBool("GunEmpty", false);
+			}
+			if (this.weaponDefinition.keepLoadingIfRoom && !this.reloadCanceled)
+			{
+				if (this.iAmmoCurrent < this.iAmmoMax && this.ammoInStorage > 0)
+				{
+					this.Reload();
+				}
+				else if (base.Animator)
+				{
+					base.Animator.SetTrigger("CancelReload");
+					base.Animator.ResetTrigger("Reload");
+				}
+			}
+			this.UpdateAmmo();
+		}
+
+		// Token: 0x06001345 RID: 4933 RVA: 0x0006D658 File Offset: 0x0006B858
+		private IEnumerator TrySightWeaponAfterReload()
+		{
+			yield return new WaitForSeconds(0.2f);
+			if (this.equipmentManager != null && this.equipmentManager.AimingInputHeld && !this.isReloading && this.canReload)
+			{
+				this.equipmentManager.SightWeapon();
+			}
+			yield break;
+		}
+
+		// Token: 0x06001346 RID: 4934 RVA: 0x0006D667 File Offset: 0x0006B867
+		protected override void UpdateAmmo()
+		{
+			if (!this.bOwnerIsNpc)
+			{
+				base.UpdateAmmo();
+			}
+			this.UpdateAmmoCurrentInAnimator();
+			Weapon.OnAmmoUpdate onAmmoUpdate = this.onAmmoUpdate;
+			if (onAmmoUpdate == null)
+			{
+				return;
+			}
+			onAmmoUpdate(this.iAmmoCurrent);
+		}
+
+		// Token: 0x06001347 RID: 4935 RVA: 0x0006D693 File Offset: 0x0006B893
+		public void CockWeapon()
+		{
+			if (base.Animator)
+			{
+				base.Animator.SetBool("NeedsCocking", false);
+			}
+			this.firstTimeEquip = false;
+		}
+
+		// Token: 0x06001348 RID: 4936 RVA: 0x0006D6BA File Offset: 0x0006B8BA
+		public void UnCockWeapon()
+		{
+			if (base.Animator)
+			{
+				base.Animator.SetBool("NeedsCocking", true);
+			}
+		}
+
+		// Token: 0x06001349 RID: 4937 RVA: 0x0006D6DC File Offset: 0x0006B8DC
+		public void PlayShuffleSound()
+		{
+			if (UnityEngine.Random.Range(0, 10) > 5)
+			{
+				if ((float)UnityEngine.Random.Range(0, 10) > 7f)
+				{
+					if (this.soundEventHandlingEquip != null)
+					{
+						this.PlaySoundEvent2DIfPlayerVolume(this.soundEventHandlingEquip, 0.5f);
+						return;
+					}
+					this.equipmentManager.PlayFidgetSound(this.equipClip, 0.5f);
+					return;
+				}
+				else
+				{
+					if (this.soundEventHandlingAimIn != null)
+					{
+						this.PlaySoundEvent2DIfPlayerVolume(this.soundEventHandlingAimIn, 1f);
+						return;
+					}
+					this.equipmentManager.PlayFidgetSound(this.aimClip, 2f);
+					return;
+				}
+			}
+			else if ((float)UnityEngine.Random.Range(0, 10) > 7f)
+			{
+				if (this.soundEventHandlingEquip != null)
+				{
+					this.PlaySoundEvent2DIfPlayerVolume(this.soundEventHandlingEquip, 0.5f);
+					return;
+				}
+				this.equipmentManager.PlayFidgetSound(this.equipClip, 0.5f);
+				return;
+			}
+			else
+			{
+				if (this.soundEventHandlingAimOut != null)
+				{
+					this.PlaySoundEvent2DIfPlayerVolume(this.soundEventHandlingAimOut, 1f);
+					return;
+				}
+				this.equipmentManager.PlayFidgetSound(this.unAimClip, 2f);
+				return;
+			}
+		}
+
+		// Token: 0x0600134A RID: 4938 RVA: 0x0006D7F0 File Offset: 0x0006B9F0
+		private void ShootSacrificeBullets(float sacrificeValue, int numberOfProjectiles)
+		{
+			this.CalculateSacrificeDamage(sacrificeValue, numberOfProjectiles);
+			if (this.sacrificeSplafEffect == null)
+			{
+				Vector3 position = this.barrelTransform.position;
+				Quaternion rotation = this.barrelTransform.rotation;
+				this.sacrificeSplafEffect = new BloodSplafsEffect[2];
+				for (int i = 0; i < this.sacrificeSplafEffect.Length; i++)
+				{
+					this.sacrificeSplafEffect[i] = Object.Instantiate<BloodSplafsEffect>(StaticInstance<AutoPool>.Instance.loadedBloodSplafsPrefab);
+					this.sacrificeSplafEffect[i].transform.SetParent(this.barrelTransform);
+					this.sacrificeSplafEffect[i].transform.position = position;
+					this.sacrificeSplafEffect[i].transform.rotation = rotation;
+					this.sacrificeSplafEffect[i].effectRootScale = this.sacrificeSplafEffect[i].transform.localScale;
+				}
+			}
+			Weapon.randomSacrificeBulletTaken ^= 1;
+			BloodSplafsEffect bloodSplafsEffect = this.sacrificeSplafEffect[Weapon.randomSacrificeBulletTaken];
+			if (this.bIsAimingDownSight)
+			{
+				bloodSplafsEffect.transform.localScale = bloodSplafsEffect.effectRootScale * 0.5f;
+			}
+			else
+			{
+				bloodSplafsEffect.transform.localScale = bloodSplafsEffect.effectRootScale * 0.6f;
+			}
+			bloodSplafsEffect.StartBloodSplaf(Vector3.zero, null);
+			bloodSplafsEffect.meshRenderer.material.SetColor("_Color", this.GetMuzzleFlareColor());
+		}
+
+		// Token: 0x0600134B RID: 4939 RVA: 0x0006D948 File Offset: 0x0006BB48
+		private void CalculateSacrificeDamage(float sacrificeValue, int numberOfProjectiles)
+		{
+			float num = this.GetDamage() * sacrificeValue * (float)numberOfProjectiles / 0.5f;
+			float num2 = num * 0.5f;
+			float currentHealth = this.owner.GetCurrentHealth();
+			if (currentHealth > 3f && num2 >= currentHealth)
+			{
+				num = currentHealth / 0.5f - 1f;
+			}
+			this.owner.ReceiveDamage(Mathf.Clamp(num, 0.1f, 999999f), DamageTypes.Sacrifice, this, Hitmesh.Data.Default, null);
+		}
+
+		// Token: 0x0600134C RID: 4940 RVA: 0x0006D9C4 File Offset: 0x0006BBC4
+		private void DoDamageAroundYou(float weaponDamagePercentage, float damageRadius, int numberOfProjectiles)
+		{
+			List<Unit> visibleUnitsFromPosition = AiAgent.GetVisibleUnitsFromPosition(this.barrelTransform.position, damageRadius, StaticInstance<GameManager>.Instance.entitiesLayer);
+			if (visibleUnitsFromPosition != null)
+			{
+				for (int i = 0; i < visibleUnitsFromPosition.Count; i++)
+				{
+					Npc npc;
+					if (visibleUnitsFromPosition[i].TryGetComponent<Npc>(out npc) && !npc.IsProtectedNpc && npc.UnitState != UnitState.Dead)
+					{
+						float damage = this.GetDamage() * weaponDamagePercentage * (float)numberOfProjectiles;
+						npc.ReceiveDamage(damage, DamageTypes.Normal, this, Hitmesh.Data.Default, null);
+					}
+				}
+			}
+		}
+
+		// Token: 0x0600134D RID: 4941 RVA: 0x0006DA48 File Offset: 0x0006BC48
+		private void SpawnOnStartShoot()
+		{
+			if (this.spawnOnStartShoot == null || UnityEngine.Random.Range(0f, 1f) > this.spawnOnStartShoot.procChance)
+			{
+				return;
+			}
+			Quaternion rotation = Quaternion.identity;
+			Vector3 vector = this.barrelTransform.position;
+			RaycastHit raycastHit;
+			if (this.spawnOnStartShoot.rotationSetting == EffectSpawnRotationSetting.OnNormalRaycastDown && Physics.Raycast(new Ray(vector, Vector3.down), out raycastHit, 5f, StaticInstance<ProjectileSystem>.Instance.geometryLayer))
+			{
+				vector = raycastHit.point;
+				rotation = Quaternion.FromToRotation(Vector3.up, raycastHit.normal);
+			}
+			GameObject gameObject = Object.Instantiate<GameObject>(this.spawnOnStartShoot.effect, vector, rotation, StaticInstance<GameManager>.Instance.effectRoot);
+			float num;
+			if (base.ItemStats.TryGetAttribute(ItemAttributes.ProjectileScale, out num) && num > 1f)
+			{
+				float d = Mathf.Sqrt(num);
+				gameObject.transform.localScale *= d;
+			}
+			if (this.spawnOnStartShoot.rotationSetting == EffectSpawnRotationSetting.TowardsPlayer)
+			{
+				gameObject.transform.LookAt(Camera.main.transform);
+			}
+		}
+
+		// Token: 0x04001B9B RID: 7067
+		private ExtendedCameraController cameraController;
+
+		// Token: 0x04001B9C RID: 7068
+		protected bool canReload;
+
+		// Token: 0x04001B9D RID: 7069
+		protected bool bWasTriggerActive;
+
+		// Token: 0x04001B9E RID: 7070
+		protected bool bIsOnCooldown;
+
+		// Token: 0x04001B9F RID: 7071
+		private float fReloadTimer;
+
+		// Token: 0x04001BA0 RID: 7072
+		public bool isReloading;
+
+		// Token: 0x04001BA1 RID: 7073
+		private bool hasClicked;
+
+		// Token: 0x04001BA2 RID: 7074
+		public bool reloadCanBeCancelled;
+
+		// Token: 0x04001BA3 RID: 7075
+		public int bulletsPerReload;
+
+		// Token: 0x04001BA4 RID: 7076
+		public bool reloadFullIfEmpty;
+
+		// Token: 0x04001BA5 RID: 7077
+		public bool damageColliderActive;
+
+		// Token: 0x04001BA6 RID: 7078
+		[HideInInspector]
+		public EquipmentManager equipmentManager;
+
+		// Token: 0x04001BA7 RID: 7079
+		public bool isPlayingReloadAnimation;
+
+		// Token: 0x04001BA8 RID: 7080
+		protected bool activelyControlEjectionPorts;
+
+		// Token: 0x04001BA9 RID: 7081
+		protected WeaponSide activeEjectionPort = WeaponSide.Right;
+
+		// Token: 0x04001BAA RID: 7082
+		private WeaponState currentAnimationType;
+
+		// Token: 0x04001BAB RID: 7083
+		private int maxParries = 2;
+
+		// Token: 0x04001BAC RID: 7084
+		private int maxAlternativeParries = 2;
+
+		// Token: 0x04001BAD RID: 7085
+		private float parryAngle = 90f;
+
+		// Token: 0x04001BAE RID: 7086
+		private int currentParries;
+
+		// Token: 0x04001BAF RID: 7087
+		private MeleeParryTypes activeParryTypes;
+
+		// Token: 0x04001BB0 RID: 7088
+		private float calculatedDarkDamage = 1f;
+
+		// Token: 0x04001BB1 RID: 7089
+		private bool onlyRangedParryAvailable;
+
+		// Token: 0x04001BB9 RID: 7097
+		[Header("Stats")]
+		[SerializeField]
+		[Range(0f, 1f)]
+		private float kickClampMin;
+
+		// Token: 0x04001BBA RID: 7098
+		[SerializeField]
+		[Range(0f, 1f)]
+		private float kickClampMax = 1f;
+
+		// Token: 0x04001BBB RID: 7099
+		private float overrideDamage;
+
+		// Token: 0x04001BBC RID: 7100
+		protected float holdRpmCdMultiplier = 1f;
+
+		// Token: 0x04001BBD RID: 7101
+		protected float holdRpmMultiplier = 1f;
+
+		// Token: 0x04001BBE RID: 7102
+		protected float ammoInMagRpmMultiplier = 1f;
+
+		// Token: 0x04001BBF RID: 7103
+		protected float ammoInMagCdMultiplier = 1f;
+
+		// Token: 0x04001BC0 RID: 7104
+		protected float holdSpreadDecreaseMultiplier = 1f;
+
+		// Token: 0x04001BC1 RID: 7105
+		private bool firesByTrigger;
+
+		// Token: 0x04001BC2 RID: 7106
+		private bool reloadWithButton;
+
+		// Token: 0x04001BC3 RID: 7107
+		protected int iAmmoMax;
+
+		// Token: 0x04001BC4 RID: 7108
+		private float fReloadTime;
+
+		// Token: 0x04001BC5 RID: 7109
+		private float remainingReloadTime;
+
+		// Token: 0x04001BC6 RID: 7110
+		private int iMaxAmmoPerShot;
+
+		// Token: 0x04001BC7 RID: 7111
+		protected int shootEventsSinceIdle;
+
+		// Token: 0x04001BC8 RID: 7112
+		private bool reloadCanceled;
+
+		// Token: 0x04001BC9 RID: 7113
+		private float bufferedReloadTime = -1f;
+
+		// Token: 0x04001BCA RID: 7114
+		private float reloadBufferWindow = 0.5f;
+
+		// Token: 0x04001BCD RID: 7117
+		private bool automaticReload;
+
+		// Token: 0x04001BCE RID: 7118
+		[SerializeField]
+		private bool volleyProjectiles;
+
+		// Token: 0x04001BCF RID: 7119
+		[SerializeField]
+		private float volleyAmount = 1f;
+
+		// Token: 0x04001BD0 RID: 7120
+		[SerializeField]
+		protected Vector2 casingEjectForceRange;
+
+		// Token: 0x04001BD1 RID: 7121
+		[SerializeField]
+		private Vector2 casingEjectAngularForceRange;
+
+		// Token: 0x04001BD2 RID: 7122
+		private bool isThrowable;
+
+		// Token: 0x04001BD3 RID: 7123
+		private List<ItemDefinition> attachments;
+
+		// Token: 0x04001BD4 RID: 7124
+		[SerializeField]
+		private float recoilAmount;
+
+		// Token: 0x04001BD5 RID: 7125
+		[Header("Effects")]
+		[SerializeField]
+		private ScreenShakeSetting shootScreenShake;
+
+		// Token: 0x04001BD6 RID: 7126
+		[SerializeField]
+		private ScreenShakeSetting reloadScreenShake;
+
+		// Token: 0x04001BD7 RID: 7127
+		private float verticalRecoilPower;
+
+		// Token: 0x04001BD8 RID: 7128
+		private float horizontalRecoilPower;
+
+		// Token: 0x04001BD9 RID: 7129
+		[SerializeField]
+		private GameObject[] showWhenSlightlyDamaged;
+
+		// Token: 0x04001BDA RID: 7130
+		[SerializeField]
+		private GameObject[] showWhenDamaged;
+
+		// Token: 0x04001BDB RID: 7131
+		[SerializeField]
+		private GameObject[] showWhenFallingApart;
+
+		// Token: 0x04001BDC RID: 7132
+		[SerializeField]
+		private GameObject[] showWhenBroken;
+
+		// Token: 0x04001BDD RID: 7133
+		[Tooltip("All renderers under this object will be affected by saturation/tint effects")]
+		[SerializeField]
+		public GameObject[] weaponRendererParent;
+
+		// Token: 0x04001BDE RID: 7134
+		protected float lastDurability = 1f;
+
+		// Token: 0x04001BDF RID: 7135
+		protected float lastWashedOutRatio;
+
+		// Token: 0x04001BE0 RID: 7136
+		private Color washedOutColor = new Color(0.85f, 0.85f, 0.85f);
+
+		// Token: 0x04001BE1 RID: 7137
+		[Header("Object refs")]
+		[SerializeField]
+		private GameObject modelObject;
+
+		// Token: 0x04001BE2 RID: 7138
+		[SerializeField]
+		protected Transform barrelTransform;
+
+		// Token: 0x04001BE3 RID: 7139
+		protected GameObject activeMagPrefab;
+
+		// Token: 0x04001BE4 RID: 7140
+		[SerializeField]
+		protected GameObject magPrefab;
+
+		// Token: 0x04001BE5 RID: 7141
+		[SerializeField]
+		protected GameObject magPrefabAlternative;
+
+		// Token: 0x04001BE6 RID: 7142
+		[SerializeField]
+		protected Transform magCreateTransform;
+
+		// Token: 0x04001BE7 RID: 7143
+		[SerializeField]
+		protected MeleeCollider meleeCollider;
+
+		// Token: 0x04001BE8 RID: 7144
+		protected Transform[] barrelTransformOverrides = new Transform[2];
+
+		// Token: 0x04001BEA RID: 7146
+		[SerializeField]
+		protected MeshRenderer[] magBulletRenderers;
+
+		// Token: 0x04001BEB RID: 7147
+		[SerializeField]
+		protected GameObject[] magBulletGameObjects;
+
+		// Token: 0x04001BEC RID: 7148
+		private Transform aimFromOverride;
+
+		// Token: 0x04001BED RID: 7149
+		private Transform[] aimFromOverrides = new Transform[2];
+
+		// Token: 0x04001BEE RID: 7150
+		[Tooltip("If set, this will be used instead of the casing prefab from caliber")]
+		[SerializeField]
+		private float casingPrefabScaleMultiplier = 1f;
+
+		// Token: 0x04001BEF RID: 7151
+		[SerializeField]
+		protected Transform[] casingEjectTransform;
+
+		// Token: 0x04001BF0 RID: 7152
+		private int casingTransformID;
+
+		// Token: 0x04001BF1 RID: 7153
+		protected Quaternion originalEjectionPortRotation;
+
+		// Token: 0x04001BF2 RID: 7154
+		private Vector3 target;
+
+		// Token: 0x04001BF3 RID: 7155
+		[SerializeField]
+		public MuzzleFlashTypes muzzleFlare;
+
+		// Token: 0x04001BF4 RID: 7156
+		[SerializeField]
+		public MuzzleFlashTypes muzzleFlareADS;
+
+		// Token: 0x04001BF5 RID: 7157
+		[Header("Sound - Shot (old ACL and AC are hidden but left in case for now)")]
+		[SerializeField]
+		private SoundEvent soundShot;
+
+		// Token: 0x04001BF6 RID: 7158
+		[SerializeField]
+		private SoundEvent soundShotSilenced;
+
+		// Token: 0x04001BF7 RID: 7159
+		[HideInInspector]
+		[SerializeField]
+		private AudioClipList fireClipList;
+
+		// Token: 0x04001BF8 RID: 7160
+		[HideInInspector]
+		[SerializeField]
+		private AudioClipList fireSilencedClipsList;
+
+		// Token: 0x04001BF9 RID: 7161
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip[] fireClips;
+
+		// Token: 0x04001BFA RID: 7162
+		[SerializeField]
+		private SoundEvent soundEventShotMutation;
+
+		// Token: 0x04001BFB RID: 7163
+		[SerializeField]
+		private bool soundShotAmmoUsedIntensity;
+
+		// Token: 0x04001BFC RID: 7164
+		[Header("Sound Player Damage - Projectile < Unit < Weapon")]
+		public SoundEvent soundPlayerDamage;
+
+		// Token: 0x04001BFD RID: 7165
+		[Header("Sound - Running Out Of Ammo")]
+		[SerializeField]
+		private AudioRunningOutOfAmmoType runningOutOfAmmoType;
+
+		// Token: 0x04001BFE RID: 7166
+		[SerializeField]
+		private bool runningOutOfAmmoPlay;
+
+		// Token: 0x04001BFF RID: 7167
+		[SerializeField]
+		private int runningOutOfAmmoNumberOfShots;
+
+		// Token: 0x04001C00 RID: 7168
+		[SerializeField]
+		private bool runningOutOfAmmoTwoMagazines;
+
+		// Token: 0x04001C01 RID: 7169
+		[SerializeField]
+		public MeleeWeaponSoundType meleeSoundType;
+
+		// Token: 0x04001C02 RID: 7170
+		[SerializeField]
+		public MeleeWeaponSoundType altMeleeSoundType;
+
+		// Token: 0x04001C03 RID: 7171
+		[Header("Sound - Handling SFX General")]
+		[SerializeField]
+		private SoundEvent soundEventHandlingClick;
+
+		// Token: 0x04001C04 RID: 7172
+		[SerializeField]
+		private SoundEvent soundEventHandlingAimIn;
+
+		// Token: 0x04001C05 RID: 7173
+		[SerializeField]
+		private SoundEvent soundEventHandlingAimOut;
+
+		// Token: 0x04001C06 RID: 7174
+		[SerializeField]
+		private SoundEvent soundEventHandlingEquip;
+
+		// Token: 0x04001C07 RID: 7175
+		[SerializeField]
+		private SoundEvent soundInspect;
+
+		// Token: 0x04001C08 RID: 7176
+		[Header("Sound - Handling SFX Reload (array overrides old)")]
+		[SerializeField]
+		private SoundEvent[] soundHandlingReloads = new SoundEvent[0];
+
+		// Token: 0x04001C09 RID: 7177
+		[SerializeField]
+		private SoundEvent soundEventHandlingMagIn;
+
+		// Token: 0x04001C0A RID: 7178
+		[SerializeField]
+		private SoundEvent soundEventHandlingMagOut;
+
+		// Token: 0x04001C0B RID: 7179
+		[SerializeField]
+		private SoundEvent soundEventHandlingSlideBack;
+
+		// Token: 0x04001C0C RID: 7180
+		[SerializeField]
+		private SoundEvent soundEventHandlingSlideForward;
+
+		// Token: 0x04001C0D RID: 7181
+		[SerializeField]
+		private SoundEvent soundEventHandlingExtraA;
+
+		// Token: 0x04001C0E RID: 7182
+		[SerializeField]
+		private SoundEvent soundEventHandlingExtraB;
+
+		// Token: 0x04001C0F RID: 7183
+		[Header("Sound - Old Legacy")]
+		[SerializeField]
+		private SoundEvent soundEventHandlingReload;
+
+		// Token: 0x04001C10 RID: 7184
+		[Header("Sound - Handling UI")]
+		[SerializeField]
+		private SoundEvent soundEventDurabilityBroken;
+
+		// Token: 0x04001C11 RID: 7185
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip[] clickClips;
+
+		// Token: 0x04001C12 RID: 7186
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip[] reloadClips;
+
+		// Token: 0x04001C13 RID: 7187
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip clipMagIn;
+
+		// Token: 0x04001C14 RID: 7188
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip clipMagOut;
+
+		// Token: 0x04001C15 RID: 7189
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip clipSlideForward;
+
+		// Token: 0x04001C16 RID: 7190
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip clipSlideBack;
+
+		// Token: 0x04001C17 RID: 7191
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip clipExtra;
+
+		// Token: 0x04001C18 RID: 7192
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip clipExtra2;
+
+		// Token: 0x04001C19 RID: 7193
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip aimClip;
+
+		// Token: 0x04001C1A RID: 7194
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip unAimClip;
+
+		// Token: 0x04001C1B RID: 7195
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip equipClip;
+
+		// Token: 0x04001C1C RID: 7196
+		[HideInInspector]
+		[SerializeField]
+		private AudioClip[] becomeBrokenSounds;
+
+		// Token: 0x04001C1D RID: 7197
+		private Transform playerCameraTransform;
+
+		// Token: 0x04001C1E RID: 7198
+		private BloodSplafsEffect[] sacrificeSplafEffect;
+
+		// Token: 0x04001C1F RID: 7199
+		private bool aimingDisabled;
+
+		// Token: 0x04001C20 RID: 7200
+		private CameraRecoil cameraRecoil;
+
+		// Token: 0x04001C21 RID: 7201
+		protected ExtendedAdvancedWalkerController playerController;
+
+		// Token: 0x04001C22 RID: 7202
+		private Vector3 aimRotation;
+
+		// Token: 0x04001C23 RID: 7203
+		private ProjectileEffect effectOnProjectile = ProjectileEffect.None;
+
+		// Token: 0x04001C24 RID: 7204
+		private Vector3 aimPosition;
+
+		// Token: 0x04001C25 RID: 7205
+		private Vector3 aimAtPosition;
+
+		// Token: 0x04001C27 RID: 7207
+		private List<ItemDefinition> compatibleAttachments;
+
+		// Token: 0x04001C2A RID: 7210
+		private int meleeHitsPerAttackMax = 3;
+
+		// Token: 0x04001C2B RID: 7211
+		private int meleeHitsPerAttackAlternativeMax = 3;
+
+		// Token: 0x04001C2C RID: 7212
+		private bool firstTimeEquip = true;
+
+		// Token: 0x04001C2D RID: 7213
+		private float animationSpeedModifier = 1f;
+
+		// Token: 0x04001C2E RID: 7214
+		private float reloadSpeed = 1f;
+
+		// Token: 0x04001C2F RID: 7215
+		private Coroutine currentADSLerpJob;
+
+		// Token: 0x04001C30 RID: 7216
+		public bool disableAimDownSight;
+
+		// Token: 0x04001C31 RID: 7217
+		public Weapon.OnFire onFire;
+
+		// Token: 0x04001C32 RID: 7218
+		protected Weapon.PostInitialization postInitialization;
+
+		// Token: 0x04001C33 RID: 7219
+		public Weapon.OnWeaponHit onHit;
+
+		// Token: 0x04001C34 RID: 7220
+		private EffectSpawnEntry spawnOnStartShoot;
+
+		// Token: 0x04001C35 RID: 7221
+		private BloodType bloodDecalOnEnvironmentHit;
+
+		// Token: 0x04001C36 RID: 7222
+		private BloodType replacesBloodType;
+
+		// Token: 0x04001C37 RID: 7223
+		private List<Renderer> meshRenderersInWeapon = new List<Renderer>();
+
+		// Token: 0x04001C38 RID: 7224
+		private Dictionary<CaliberType, List<CaliberModelVisual>> caliberModelVisuals;
+
+		// Token: 0x04001C39 RID: 7225
+		private Coroutine rpmCooldownRoutine;
+
+		// Token: 0x04001C3A RID: 7226
+		protected float timeShootingRecoil;
+
+		// Token: 0x04001C3B RID: 7227
+		protected float timeShootingRecoilMax = 1f;
+
+		// Token: 0x04001C3C RID: 7228
+		protected float kickStrengthCam = 0.5f;
+
+		// Token: 0x04001C3D RID: 7229
+		protected float kickStrengthAnim = 0.5f;
+
+		// Token: 0x04001C3E RID: 7230
+		private float aimValueCurrent;
+
+		// Token: 0x04001C3F RID: 7231
+		private float aimValueTarget;
+
+		// Token: 0x04001C40 RID: 7232
+		private float aimValueChangeSpeedUp = 10f;
+
+		// Token: 0x04001C41 RID: 7233
+		private float aimValueChangeSpeedDown = 5f;
+
+		// Token: 0x04001C42 RID: 7234
+		private AnimatorStateInfo savedStateInfo;
+
+		// Token: 0x04001C43 RID: 7235
+		private float animationSavedNormalizedTime;
+
+		// Token: 0x04001C44 RID: 7236
+		private Coroutine ReloadDoneChecker;
+
+		// Token: 0x04001C45 RID: 7237
+		private float updateAnimatorSettingsTimerMax = 0.25f;
+
+		// Token: 0x04001C46 RID: 7238
+		private float updateAnimatorSettingsTimer;
+
+		// Token: 0x04001C47 RID: 7239
+		private float aimDistance = 2.5f;
+
+		// Token: 0x04001C48 RID: 7240
+		private float timeSpentReloading;
+
+		// Token: 0x04001C49 RID: 7241
+		private SoundParameterIncrease2D soundParameterIncrease2D = new SoundParameterIncrease2D(1f, UpdateMode.Once);
+
+		// Token: 0x04001C4A RID: 7242
+		protected float chargeAmount = 1f;
+
+		// Token: 0x04001C4B RID: 7243
+		public Weapon.OnAmmoUpdate onAmmoUpdate;
+
+		// Token: 0x04001C4C RID: 7244
+		private static int randomSacrificeBulletTaken;
+
+		// Token: 0x02000326 RID: 806
+		// (Invoke) Token: 0x06001350 RID: 4944
+		public delegate void OnFire();
+
+		// Token: 0x02000327 RID: 807
+		// (Invoke) Token: 0x06001354 RID: 4948
+		protected delegate void PostInitialization();
+
+		// Token: 0x02000328 RID: 808
+		// (Invoke) Token: 0x06001358 RID: 4952
+		public delegate void OnWeaponHit(Hitmesh hit = null);
+
+		// Token: 0x02000329 RID: 809
+		// (Invoke) Token: 0x0600135C RID: 4956
+		public delegate void OnAmmoUpdate(int currentAmmo);
+	}
+}

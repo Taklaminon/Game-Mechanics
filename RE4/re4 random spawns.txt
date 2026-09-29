@@ -1,0 +1,8 @@
+ammo soft caps
+
+handgun: 101-126
+shotgun: 0-45
+TMP: 105-120
+rifle: none
+minethrower: 0-?
+magnum: none

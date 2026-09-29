@@ -1,0 +1,17 @@
+Say you have a tensor that you KNOW is rank 1, but you only have ranges for each value and not the values themselves. You want to narrow down the ranges as much as possible.
+
+Let's use weapon damage as an example, because that's what I ultimately want to solve.
+
+First step, divide all values by an element arbitrarily denoted as having a multiplier of "1"
+
+First, we want to narrow down multipliers for a single axis, say the location of the damage
+	for each "row" along the axis: 
+		The lower bound is the maximum value you get by dividing the lower bound of an element in the row by the upper bound of the corresponding element in the same row as the "1" element
+		The upper bound is the minimum value you get by dividing the upper bound of an element in the row by the lower bound of the corresponding element in the same row as the "1" element
+
+After doing this, we can set the new bounds for each element
+	new lower bound for each element as the lower bound of the multiplier times the lower bound of the "1" element
+		NO IT ISN'T TRY AGAIN
+	It doesn't look like a single-axis inference like this is possible. I wonder if a multi-axis one is?
+
+Is it even possible to get better than this first step?

@@ -1,0 +1,12 @@
+beryl on lynx vs ornate necklace
+
+the alternative to beryl on ornate is sap, yellow, emeral, alex
+the alternative to beryl on lynx is ruby, sap
+
+lynx + RRB = 42k (12k bonus)
+lynx + RSA = 35.1k (8.1k bonus)
+
+ornate + RRBB = 59.5k (24.5k bonus)
+ornate + SYEA = 52.8k (19.8k bonus)
+
+looks like lynx is better, can't be assed to do full math

@@ -1,0 +1,44 @@
+sven_rpg1 makes it easy to test because of the zombie spawner at the start
+
+pistols:
+VP70 is the most competent 9mm pistol
+	Damage is the same across guns using the same ammo
+Match is the most competent 45 ACP pistol
+	match has better eco, but VP70 is probably better for survivability (and has less overkill)
+makarov and mauser aren't that good for eco. They also just aren't that good. Makarov has a place since it's only 100 dollars, but mauser is too expensive for its ammo cost and poor performance.
+deagle is dogshit for eco. Just buy a revolver honestly
+
+revolvers:
+webley is very practical and is much better for eco than any pistol. Plus it gibs.
+python has worse dps but better damage per shot. still worse eco. don't buy it.
+model 29 has an absurdly long reload and is worse eco. It doesn't even gib. Don't buy it.
+
+carbines:
+schnell really sucks, ammo is too expensive and the ironsights are bad
+Mk. 18 has great sights, but has 10% worse damage than M4A1
+M4A1 is one of two eco choices. It uses the same ammo as Mk.18 but does 10% more damage, iron sights aren't so bad
+G36C, AKS-74U are both just worse M4A1s
+M1A1 is semi-auto and has a bayonet. It's not very good as a gun.
+SKS is semi-auto, it's another eco choice along with M4A1. It's only slightly better at eco and has annoying ironsights, so just use M4A1
+
+the actually good carbines are all better eco than the match but a lot worse than the webley
+
+
+
+damage values are for zombie headshots. "approx" means it's 10x the body shot damage.
+
+pistols-
+9x19mm: 30 for $20 (smgs) 92 damage
+7.63mm: 10 for $15 (mauser) 162 damage
+45 ACP: 12 for $10 (usp) 25 for $20 (UMP smg) 119 damage
+9x18mm: 8 for $5 (makarov) 81 damage
+.50 AE: 7 for $25 (deagle) approx. 270 damage
+
+revolvers-
+.455: 6 for $10 (Webley) approx 460 damage
+.357: 6 for $15 (Python) approx 540 damage
+.44: 6 for $20 (model 29) approx 660 damage
+
+carbines-
+7.63mm: 10 for $15 (mauser) 135 damage
+5.56x45mm: 30 for $30 (carbines) 200 for $130 (M249) 108 damage

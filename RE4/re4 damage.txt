@@ -1,0 +1,51 @@
+All testing was done on mine ganados on difficulty 10, and it may vary with different enemy types.
+HP is stored as a 16 bit signed integer. Many enemies, including bosses, have 1000 hp.
+
+1 power = 127.5 damage (definitely varies based on enemy type)
+This also varies based on difficulty. From 0-5 it's 300-30x. From 5-inf it's 172.5-4.5x.
+
+Headshots deal 1.2x damage
+All other body groups deal 1x damage
+
+
+Knife
+-Deals 220 damage but has no listed power
+-Critical headshots deal 10x damage
+-Crit rate is 0%
+	-Much higher with exclusive handgun. Probably 35%
+
+Handgun
+-Critical headshots deal 10x damage
+-Crit rate is around 8% (tested 100)
+	-around 36% with exclusive (tested 200)
+
+Broken Butterfly
+-Critical headshots deal 25/9x damage (in general, crits deal damage in nice multiples of 5/9)
+-Crit rate is low. Probably 10%
+
+Bolt-Action Rifle
+-Critical headshots deal 20/9x damage
+-Crit rate is 100%
+
+Striker
+-Deals full damage even if only 1 pellet hits
+-Seemingly always headshots if the pointer is on the head and never if the pointer is on the chest. Outside of that, it could either headshot or body shot, but I do not believe it is random.
+-Critical headshots deal 75/9x damage 
+-Crit rate is around 33% (tested)
+
+TMP
+-1.4x multiplier for damage (likely varies based on enemy)
+-Critical headshots deal 10x damage
+-Crit rate is around 5%
+
+Mine Thrower
+-has "power" of 20
+-2 is no better than 1 due to invuln during knockback
+-can headshot
+	-always headshots if the dart lands on the head. Never headshots if the dart lands elsewhere on the body. Outside of that, it could either headshot or body shot, but I do not believe it is random.
+-Splash damage deals same amount as direct hit.
+-Critical headshots deal 30/9x damage. 
+-Crit rate is low. Probably 7%
+
+
+Standard crit rate seems to be 7%. Shotgun and exclusive pistol get 5x that. Rifle gets 100%.

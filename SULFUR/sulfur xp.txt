@@ -1,0 +1,13 @@
+exp per rank
+These are the amounts of xp at which you will have each rank, NOT the xp needed to LEVEL UP from the last rank.
+
+5: 1953.125
+4: 781.25
+3: 312.5
+2: 125
+1: 50
+
+with a lock of the magus, you get 100x xp, meaning you need to kill an enemy that gives 20 xp to fully level your gun
+easiest way to do that is to kill a hellshrew snipa, which gives exactly 20 xp
+
+XP bonuses are additive, meaning a library card + lock combo is useless

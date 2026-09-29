@@ -1,0 +1,18 @@
+The Last Stand
+
+SurvivorsFound:
+	[1,5] hours: random(2)
+	[6,10] hours: random(2)+1
+	[11,12] hours: random(2)+2
+capped at 7 survivors
+
+SurvivorsKilled:
+	[0,4] hours: 0
+	[5,12] hours: random(2)
+capped at 1 survivors
+
+Repairs:
+	survivors * hours * 5%
+
+Weapons:
+	if hours > 0, hours + survivors

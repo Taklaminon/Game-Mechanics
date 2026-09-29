@@ -1,0 +1,4 @@
+most likely not a value under 1000
+freezing all possible floats does nothing
+try with assumption that it is frozen until it's reset
+probably changes immediately upon stun. Doesn't change on getting up.

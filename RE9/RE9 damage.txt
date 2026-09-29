@@ -1,0 +1,83 @@
+RE9 damage
+kotetsu, takout charm, insane, unknown DA level
+normal stab, body- 30 damage
+panic stab- 30 damage
+double stab- 30 damage each
+heavy stab, arm- 30 damage
+heavy stab, body- 30 damage
+running stab, body- 42 damage
+heavy stab, head- 30 damage
+conclusion: all stabs deal the same amount of damage, except for a running stab
+
+hunting knife, takeout charm, insane, unknown DA- 
+heavy stab, head- 30 damage
+conclusion: hunting knife deals same damage as kotetsu
+
+kotetsu, no charm, insane, unknown DA-
+heavy stab, arm- 20 damage
+conclusion: takout gives +50% damage
+prediction: running stab will deal 28
+running stab- 28 damage
+conclusion: right on the money
+
+
+Needle, no charm, insane-
+mid-range, focused, head- 54 damage
+close-range, focused, head- 54 damage
+long-range, focused, head- 32 damage, 43 damage
+theory: range makes a difference, longer ranges give less damage, but there's a cutoff
+close-range, focused, body- 40 damage
+close, focused, upper leg- 34 damage
+close, focused, arm- 34 damage
+close, unfocused, body (just looking)- 27 damage, 32 damage, 32 damage, 27 damage, 96 damage!
+conclusion: crits can always happen, and they deal 3x damage
+unknown: actual crit rate
+
+close, unfocused, body (just movement)- 32, 32, 32, 32, 32
+close, unfocused, body (movement+looking)- 32, 32, 32, 32
+the 27 damage from "just looking" seems to be an error, possibly from hitting legs or arms while flailing wildly
+close, half-focused, body- 32
+close, almost focused, body- 32
+conclusion: lacking any amount of focus gives about a 0.8x multiplier to damage
+close, unfocused, legs/arms- 27
+conclusion: previous 27 was definitely from hitting arms/legs instead of body
+close, unfocused, head- 43
+conclusion: 0.825>multiplier>7.805
+
+
+
+
+Needle, charm, insane
+mid-range, focused, head- 75 damage
+conclusion: multiplier between 1.36x and 1.41x
+close-range, focused, body- fuckton of damage, think I just got a crit?
+close-range, focused, body- 56 damage
+conclusion: multiplier between 1.365x and 1.41x
+close, focused, lower leg- 47 damage
+close, focused, upper leg- 47 damage
+conclusion: upper vs lower leg doesn't change damage
+conclusion: multiplier between 1.365x and 1.41x
+most likely, the multiplier is 1.4x. Will need more testing.
+
+
+Check spreadsheet of same name for further testing
+
+Our goal is to use the data to find the various multipliers (head vs torso vs legs, focused vs focused, charm vs no charm)
+The first step is to pick a single multiplier and create a range based on comparing like data.
+For instance: (head, focused, no charm) vs (torso, focused, no charm)
+Assume that the values in this game always round down. That means each measured value is at most 1 below the true value. Use this to construct upper/lower bounds for multipliers.
+Additionally, we'll need to choose a "baseline" damage, for now, that will be the focused, no charm, torso damage. The multiplier will be defined as 1, and other multipliers will be compared against it.
+
+From the spreadsheet, my best guess for the multipliers are: 
+focus: 1.25x
+charm: 1.4x
+
+head: 1.35x
+body: 1x
+legs: 0.85x
+
+I decided to check my results against a guide
+
+focus adds a certain amount to the "base damage" of a weapon, different per each gun. It's 80 -> 100 for the needle
+"knives" section was correct, except there's also a triple slash, where the third deals the same +40% damage
+rookie charm does +40% on the freya but +30% on the pistols

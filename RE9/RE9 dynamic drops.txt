@@ -1,0 +1,104 @@
+Dynamic drops are based on ammo in inventory + magazine. 
+The threshold is a noninclusive maximum, so 149 machine gun rounds gets you a drop but 150 doesn't.
+
+handgun ammo seems to work differently. In a video, I saw someone get 10 from a box while low on handgun ammo, but in my testing, it's always 4 or 5
+
+gunpowder/scrap seems unaffected by dynamic drops, at least for crates
+
+
+As for crafting, scrap sells for 100, small sells for 200, large sells for 300
+handgun costs 300 to craft and gives 300 worth of ammo
+shotgun costs 400 to craft and gives 150 worth of ammo (bad deal)
+machgun costs 400 to craft and gives 800 worth of ammo (good deal)
+snrifle costs 500 to craft and gives 500 worth of ammo
+
+conclusion: to maximize profits
+	Sell all machine gun rounds
+	Leave machine gun empty
+	Never let machine gun rounds exceed 150
+	Only craft machine gun ammo
+
+Maximizing shooting potential is trickier. 
+There seems to be enough fixed drops that our main concern is maximizing damage per credit without dipping below the threshold
+a shotgun blast seems to stun commons in 1 shot, allowing for melee kills (50 credits per kill)
+a handgun bullet seems to stun in 3 (90 credits per kill)
+a machine gun bullet seems to kill in 10 (200 credits per kill)
+a rifle kills in 1 (100 credits per kill)
+
+Shotgun seems to be the winner here, but remember not to fall below 15, since shotgun ammo is the worst dynamic drop
+	This causes tension. Crafting 3 shotgun ammo loses you 400 credits, and getting a shotgun ammo drop costs you 400. We have to switch to a different gun eventually.
+
+handgun is second. 
+	It has the benefit of not being too terrible to craft, but it has pretty terrible dynamic drops
+	BUT we have to consider opportunity cost. 
+		scrap-bound: Crafting handgun ammo cucks us out of 1/2 a machine gun craft, 
+
+Ok, new methodology
+
+costs for drops will be the amount of money you could get if you got smg rounds instead.
+	calculated as (smg sell)/(drop amount)
+costs for crafts will be the amount of money you could get if you only sold resources/smg rounds. 
+	This probably depends on relative scarcity of scrap and small gunpowder.
+	We will assume we are small-gunpowder-bound, but extreme use of scrap could shift this estimate.
+		That means the value of 1 scrap is 100 credits
+		1 gunpowder increases value of 2 scrap from 200 to 800, so it has a value of 600
+	If we assume we are scrap-bound
+		the value of gunpowder is 200
+		2 scrap increases value of 1 gunpowder from 200 to 800, so it has a value of 300
+
+When you have over the threshold, the cost of firing is the sell price
+When you have under the threshold, the cost of firing is the craft cost
+When you have under the threshold AND not enough resources to craft, the cost of firing is the drop cost
+
+Fire the shotgun till you drop to the threshold, as it has the lowest sell cost
+Fire the handgun and rifle till you drop to the threshold, as those two have sell costs lower than any drop cost
+Fire the rifle till you drop to the threshold AND use enough scrap that you are scrap-bound, as it has the lowest gunpowder-bound cost
+Fire the shotgun till you drop to the threshold AND you're out of resources, as it has the lowest scrap-bound cost
+Only then do you fire the shotgun/rifle, as they share the lowest drop cost
+
+Shotgun, handgun, rifle
+Craft shotgun
+Craft rifle
+Drop rifle/shotgun
+
+Problems:
+This doesn't account for the possibility of enemies having different dynamic drops (they probably do)
+This assumes you can always sell your machine gun rounds (you probably can't)
+You would presumably need to balance being gunpowder-bound and scrap-bound better than just "switch over when you switch over"
+Shots to kill relies entirely on vibes from my normal mode playthrough.
+
+
+NEW WRINKLE
+you can craft grenades with 1 scrap and 2 large gunpowder. Grenades sell for 1000, which means this craft gives 200 credits.
+
+
+Further drop testing: 
+tentacle things rarely have a dynamic drop, 10 machine gun bullets, unsure of other ammo quantities
+
+umbrella crates have a dynamic drop
+30 machine gun
+10 handgun
+3 shotgun
+5 rifle
+seemingly can't drop healing items
+can't drop resources still
+
+default drop: 3 handgun
+
+dynamic drops don't happen if you don't have the necessary gun
+dynamic drops seem to have the same thresholds on all crates
+if you're under the threshold for multiple ammos, a random one is chosen
+
+
+umbrella crate (Grace)
+7 handgun
+default drop: 3 handgun
+Grace seems to have the same 35 threshold
+
+
+umbrella zombies (leon)
+seem to have dynamic
+30 machine gun
+
+lickers
+20 machine gun

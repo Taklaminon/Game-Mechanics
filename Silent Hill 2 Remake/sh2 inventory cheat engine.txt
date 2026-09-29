@@ -1,0 +1,69 @@
+Jame's inventory seems to be stored all together in memory. The pattern is 4 bytes of (something), 4 bytes of 0, 4 bytes for the amount you have.
+	The third value definitely gets 4 whole bytes. Setting the value to something over the 16 bit integer limit causes no issues.
+	the second value is actually set to a value other than 0 for some items. I'm not sure why. I still haven't found out what any of them are.
+	Many items have the amount set to 1, implying that items you can only have 1 of are tracked here. This should include weapons, fingers crossed
+
+
+to get from index to address, take START + 12*index + 8
+
+1: boolean
+2: boolean
+3: chainsaw 00429A6E 00000000
+4: bool
+5: bool
+6: health drink 0040D85B 00000000
+7: bool
+8: syringe 0040D862 00000000
+9: bool
+10: bool
+11: bool
+12: handgun ammo 00429C05 00000000
+13: bool
+14: bool
+... (metal pipe is somewhere in this region)
+36: handgun 0000E04F 00000000
+...
+64: shotgun 0000E053 00000000
+65: shotgun ammo 00429D04 00000000
+...
+95: rifle ammo 00429973 00000000
+...
+98: rifle 0000E058 00000000
+
+These values seem to track very closely with the order in which I picked them up. 
+	The first 4-8 bytes must be what actually records the item. That's why we needed to have picked up a health drink for that plugin to give us more.
+	There seems to be a big chunk of memory after this that's full of 0s and isn't volatile
+1ED7F90BA40 START (inclusive)
+1ED7F90BBF0 HANDGUN
+1ED7F90BD40 SHOTGUN
+1ED7F90BD54 SHOTGUN AMMO
+1ED7F90BEBC RIFLE AMMO
+1ED7F90BEE0 RIFLE
+1ED7F90BF00 256 (this might signify the end of the inventory. It might move when picking up an item for the first time. Have to check)
+1ED7F90C010 END OF STABLE REGION (noninclusive)
+
+Further testing needs to be done from the start of the game. I have to do pointer shit to find this before getting my first weapon.
+
+
+Start of game, stable region contains only 2 items, presumably the letter from Mary and the photo of Mary
+	00413D39 and 00413D1F
+third item you get is the map of south vale
+	00429AC3
+book of crimson ceremony
+	0042A07B
+Key of sorrow
+	0043561F
+Map of east south vale
+	00435187
+Map of west south vale
+	00435219
+
+changing the value of personal and maps seems to do nothing. Changing the ID deletes them from your inventory. 
+The game seems to set any item ID to 0 immediately afterwards if you try to put the handgun there while the count is 0.
+Placing a handgun in a specific spot manually causes it to have no clip and james to put it away immediately after bringing it out. This resolves after saving and loading.
+
+
+	
+
+
+29B8544E368 - 29B854103AC possible offset from lying figure hp to lying figure left thigh

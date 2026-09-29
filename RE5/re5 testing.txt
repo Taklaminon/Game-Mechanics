@@ -1,0 +1,5 @@
+villagers- 4x damage from shotgun
+
+can't nail down hydra damage. Seems like 2.75x, but I've gotten from 1.925 to 3.025, in increments of 0.025
+My guess is that the variance comes from some true damage value being split between body groups
+0.9x for legs, 1.2x for head, gives that a pellet would have to deal 0.25x of the damage

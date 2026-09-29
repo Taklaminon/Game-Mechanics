@@ -1,0 +1,12 @@
+During wesker's second fight, you either need to deal 50k damage before killing him or kill him twice with 25k damage each
+	If you kill him at, say 40k damage, you will have to do another 25k damage anyway
+	Damage dealt during his kill doesn't count
+	Damage dealt during his stun doesn't count
+
+
+Each loop of the magnum method deals 2 magnum shots and 7500 melee damage
+	Those 2 magnum shots will deal around 12.5k, but might only deal 10k if you hit a leg or arm on second shot
+	You start at 12.5k damage from magnum shots 
+	You get 20k from the first loop (ending on the start of the next knockdown) bringing you to 32.5k
+	you get 6.5k from knocking him down, 1k from punching him, and 7.5k from the shot before the punch, bringing you to 50k
+		If you got more headshots than leg shots (after the first 2 shots), then you can kill him with a pistol shot. Otherwise you need a magnum shot.

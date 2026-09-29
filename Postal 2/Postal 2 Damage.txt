@@ -1,0 +1,27 @@
+Postal 2 damage
+
+Headshots are determined based on the z coordinate of the shot. This means shots on the upper chest deal headshot damage.
+
+Enemies lose a percentage of their health from close-range shots to the back of the head with the pistol. This portion is called "TakesPistolHeadShot" in the code.
+-For many enemies, this value is 1.0, meaning these shots deal their entire maxhp worth of damage
+
+
+Close-range shotgun headshots work the same way but with "TakesShotgunHeadShot." Damage is determined per pellet (it shoots 4 pellets), which is why they kill most enemies in 1 hit.
+-Same damage per pellet for sawed-off, but triple the pellets
+-There's actually a system for determining whether to use this or just multiply damage by 4 or just deal the enemy's entire max health. I do not understand the conditions.
+
+Rifle headshots do the same with "TakesRifleHeadShot"
+-It has no complicated system. It will always use TakesRifleHeadShot
+
+Shovel headshots do the same with "TakesShovelHeadShot"
+-headshots are random. Their chance is the same as the percent of health the enemy is missing. So an enemy at half health has a 50% chance to be headshotted. I do not believe the altfire can truly headshot.
+
+Baton uses "TakesShotgunHeadShot"
+-I am not sure the conditions for the baton to deal headshot damage. I can't get the baton to deal the damage, even while it's getting headshot stun.
+	-You can tell if it headshots because their head is supposed to explode
+
+https://github.com/Kizoky/p2unrealscript/blob/de4a8811092c78dc217d26be1081c7aa4085e2b0/Postal2Game/Classes/P2Pawn.uc#L1698
+This is the part of Postal 2 Pawns that deals with special damage. I believe it is called whenever TakeDamage is called.
+
+This gives me a headache. I hate this.
+

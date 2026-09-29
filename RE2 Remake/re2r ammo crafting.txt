@@ -1,0 +1,29 @@
+n + n = (12-15)
+L + n = 30
+L + L = 60
+
+(L+n) * 2 = 60
+L+L + n+n = 75
+gunpowder (large) should never be combined with normal gunpowder
+
+1 large is worth 30 handgun ammo
+1 normal is worth 7.5 handgun ammo
+
+L+h = 6
+n+h = 3
+
+
+seems to be that there's a base amount that's being multiplied by a random modifier between 0.8 and 1, rounded (down?) to the nearest whole number.
+	(does the rounding affect the expected value?)
+
+
+
+h+h = (81-90)
+	That's definitely not 0.8 to 1
+1 h is worth 50 smg ammo (yea I'll fix it with the averages later)
+
+
+L+h = 6 [50 smg, 30 handgun]
+(n+h)*2 = 6 [100 smg, 15 handgun] this is more expensive damage-wise but less expensive convenience-wise
+
+soooo crafting acid grenades is pricy, with a min of 5 handgun ammo and 8.25 smg rounds. I'm not sure whether this is worth it, but the upper price of 2.5 handgun and 16.5 smg probably isn't... until you have professor x fucking you in the butt while a licker is on your dick

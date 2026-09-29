@@ -1,0 +1,98 @@
+professional
+24071 is a kill
+24445 is not
+24190 is a kill
+24292 is not
+
+
+24696 is a kill IF you didn't deal any melees
+24849 is still not a kill
+
+25471 is a kill if you use shotguns only
+25648 is a kill magnum only
+25750 is a kill with handcannon, no matter where you aim
+26175 is not
+25648 is a kill with the m29
+25920 is not
+
+25648 with m29 is not when abusing the stun
+but 25376 is
+	my theory is that he secretly takes half damage from the first shot after going down. Testing with only getting shots in that phase.
+		25648 still worked with that test
+	My second theory is that he takes reduced damage on shots where he rushes you. Testing with only getting those shots
+		turns out you only deal damage on shots where he rushes you IF you are far enough behind him
+	New test is to hit him with 2 leg shots from handcannon and then 1 headshot, giving 2.5 hits. Count how many leg shots you need after
+		As suspected, the headshot did absolutely nothing. Other data works with the theory that all other shots are normal.
+
+That narrows down the damage range to 25920 - 25750, which is 4080 to 4250. This is consistent with the theory that he goes down after 5000 damage before difficulty adjust.
+In fact, the handcannon kill deals EXACTLY 5000 damage. I want to find a way to deal slightly less
+	8 deagle shots deals 4800
+	3.5 deagle 4.5 m29 deals 4980, which is the closest we can get to 5000 with our GCF of 20
+		That's 3 m29 headshots, 1 deagle headshot, and 2 deagle body shots
+
+survived at 25767! That means it's exactly 5000 damage (with the magnum)
+
+to test if it's the same for pistols, we should deal a bunch of magnum damage and then finish with pistol. 
+3 handcannon headshots leaves us with 500 hp, which is 5 m92 body shots
+	it took 10... looks like the underlying damage dealt has the same 0.2 multiplier
+	If that's the case, the ak74 should also take 10 shots
+		it did
+	
+new theory is that the multipliers also aren't considered, and he actually just goes down after you deal 25000 damage
+	4.5 handcannon shots leaves him with 2500 hp, which should take 2 dragunov body shots
+		sure enough, it did
+
+now for shotguns
+	26175 after magnum shots
+	survived at 25818
+	didn't survive at 25733
+		That would only be 1300 at a multiplier of 0.4, but we needed 2500. Presumably that means the multiplier is 0.2
+			but, dealing 2600 damage with 3 shots from a gun that deals 400 power is wild. I'll need more damage testing with shotguns, maybe against the executioners
+
+Now I want to test melees. My assumption is that their damage also isn't affected by difficulty, but there will be some multiplier you can't see in the trainer
+	If they do exactly 1300, that would mean 2 combos and 4 magnum shots would stun wesker. I'll start by testing 1 combo and 4 shots
+		That worked, so a combo does at least 2500
+	Let's just see how many shots it takes after a combo
+	It took 4, so a melee combo does between 2500 and 5000. My assumption is 2600 or 3250
+	I'll try with the deagle. Need to deal 20000 damage, so 7 deagle shots for 21000
+	That's 4 headshots and 1 body shots
+		That was enough to drop him... so we deal at least 4000 damage
+	Lets figure out a way to test 4500
+	1.5 d, 5 m
+	That's 1 deagle headshot, 2 m29 headshots, 2 m29 body shots
+		That's a kill, so at least 4500
+	I want to check just below 5000, so
+		20100
+	2 m29 headshot, 1 deagle headshot, 2 deagle body shot
+		That's a kill, so at least 4900. Let's check 5000 once again.
+		It actually worked this time? I guess I was just missing.
+	That gives a range of 5000 to 7500. Top candidates are 5000 and 6500
+	looks like it's 6500. Tried with 18600 damage and it killed him
+
+Really fucking weird: Wesker seems to sometimes not get downed by machine gun bullets, even when he has run out of health
+
+
+The bow deals 0.3 stun
+
+
+Wesker doesn't regenerate his sunglasses instantly after the combo, so you can throw another flash and beat the fuck out of him a second time
+Wesker can be hit right after a combo, but this doesn't contribute to his stun. Presumably also the case for shooting him during a combo.
+	Seems this also doesn't contribute to him dying
+Wesker's stun counter from normal guns doesn't reset if you stun him with a flash. I don't know how this interacts with the GL flashes.
+
+
+If you knock wesker down 4 times, he'll run out of health, even without shooting him.
+
+Possible cheap strategy (handgun and flash only):
+
+start by shooting him in the back of the head 4 times. When he rushes you, shoot him twice.
+When he's on the ground, shoot twice, and then throw a flash grenade.
+Hit him with the beatdown and IMMEDIATELY throw a second flash grenade.
+Hit him with another beatdown and then stab him to make him rush you before shooting him twice
+When he's on the ground, shoot him once to stun him and another 2 times just to deal a bit of damage.
+beat him down a THIRD time, and then stab him to make him rush you before shooting him twice
+when he's on the ground, shoot him 5 times
+	shoot him while he's attacking to end the fight
+
+If you do this right, you should get 19500 damage from the beatdowns and another 3000 damage from countering him 3 times.
+	That means you just need to deal 2500 damage from the 20 shots you take. That's 125 damage per shot, which you will almost certainly get even with the weakest handgun.
